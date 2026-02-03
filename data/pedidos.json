@@ -1,0 +1,12 @@
+[
+    {
+        "cliente_rut": "164187799",
+        "cliente_nombre": "Raul Barahona Obligado",
+        "tipo_extintor": "6kg",
+        "cantidad": 10,
+        "tipo_servicio": "nuevo",
+        "precio_unitario": 28500,
+        "total": 339150,
+        "id": 1
+    }
+]

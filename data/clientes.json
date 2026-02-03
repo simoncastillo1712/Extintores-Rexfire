@@ -1,0 +1,30 @@
+[
+    {
+        "rut": "156657247",
+        "nombre": "Simon Castillo",
+        "email": "simon.castillo.a@gmail.com",
+        "telefono": "958831307",
+        "direccion": "Fray Luis de la Peña 3132"
+    },
+    {
+        "rut": "164187799",
+        "nombre": "Raul Barahona Obligado",
+        "email": "raulbarahonaobligado@gmail.com",
+        "telefono": "984844399",
+        "direccion": "Fray Luis de la Peña 3132"
+    },
+    {
+        "rut": "70466430",
+        "nombre": "Marcela Armijo",
+        "email": "marcearmi@gmail.com",
+        "telefono": "987654321",
+        "direccion": "Pasaje Las Lomas 345"
+    },
+    {
+        "rut": "122656675",
+        "nombre": "Juan Perez Cotapoz",
+        "email": "juanperez@gmail.com",
+        "telefono": "968762344",
+        "direccion": "Andes 3154, Santiago Centro"
+    }
+]
