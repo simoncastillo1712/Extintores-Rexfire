@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static rexfire_filters %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0 fw-bold">Recargas y Servicios</h2>
+        <p class="text-muted mb-0" style="font-size:0.9rem;">
+            Mantenimiento certificado para tus extintores
+        </p>
+    </div>
+    <a href="{% url 'ver_carrito' %}" class="btn btn-primary position-relative">
+        <i class="bi bi-cart3"></i> Ver carrito
+        <span id="carritoBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if not carrito_total_items %}d-none{% endif %}">
+            {{ carrito_total_items }}
+        </span>
+    </a>
+</div>
+
+<!-- Buscador -->
+<div class="mb-4">
+    <form method="get" class="d-flex">
+        <div class="input-group">
+            <span class="input-group-text" id="search-icon-servicios">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" name="q" placeholder="Buscar servicio o accesorio"
+                   value="{{ q }}" class="form-control"
+                   aria-describedby="search-icon-servicios" />
+        </div>
+        <button type="submit" class="btn btn-primary ms-2">Buscar</button>
+    </form>
+</div>
+
+{% if servicios %}
+<div class="row">
+    {% for producto in servicios %}
+    <div class="col-md-4">
+        <div class="card border mb-3 producto-card"
+            data-id="{{ producto.id_producto }}"
+            data-nombre="{{ producto.nombre }}"
+            data-precio="{{ producto.precio }}"
+            data-stock="{{ producto.stock }}"
+            data-descripcion="{{ producto.descripcion|default:'' }}"
+            data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
+
+            {% if producto.imagen %}
+            <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
+            {% else %}
+            <div class="card-img-placeholder d-flex align-items-center justify-content-center bg-light">
+                <i class="bi bi-wrench-adjustable text-primary" style="font-size:3rem;"></i>
+            </div>
+            {% endif %}
+
+            <div class="card-body d-flex flex-column">
+                <span class="badge mb-2 align-self-start"
+                      style="background:#f0f0f0;color:#444;font-size:0.72rem;">
+                    {{ producto.id_categoria.nombre }}
+                </span>
+                <h5 class="card-title fw-bold mb-1">{{ producto.nombre }}</h5>
+
+                {% if producto.precio == 0 %}
+                <p class="card-text fw-bold mb-1" style="font-size:1.05rem;color:#065f46;">
+                    GRATIS <small class="fw-normal text-muted" style="font-size:0.8rem;">incluido en la compra</small>
+                </p>
+                {% else %}
+                <p class="card-text text-primary fw-semibold mb-1" style="font-size:1.05rem;">
+                    ${{ producto.precio|clp }} <small class="text-muted fw-normal">+ IVA</small>
+                </p>
+                {% endif %}
+
+                {% if producto.descripcion %}
+                <p class="card-text text-muted mb-3" style="font-size:0.8rem;">
+                    {{ producto.descripcion|truncatechars:60 }}
+                </p>
+                {% endif %}
+
+                <div class="mt-auto d-flex gap-2 align-items-center">
+                    <button type="button" class="btn btn-success btn-sm btn-comprar flex-grow-1">
+                        <i class="bi bi-cart-plus"></i> Agregar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    No se encontraron servicios{% if q %} para "{{ q }}"{% endif %}.
+</div>
+{% endif %}
+
+<!-- Modal (idéntico al de productos) -->
+<div id="productoModal" class="producto-modal-overlay" aria-hidden="true" data-specs-label="SERVICIO OFRECIDO">
+    <div class="producto-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductoNombre">
+        <button type="button" class="producto-modal-close" id="cerrarModalBtn" aria-label="Cerrar modal">&times;</button>
+        <div class="producto-modal-body">
+            <div class="modal-layout">
+                <div class="modal-img-col">
+                    <img id="modalProductoImagen" class="producto-modal-img" src="" alt="Imagen servicio">
+                    <div id="modalImgPlaceholder" class="modal-img-placeholder" style="display:none;">
+                        <i class="bi bi-wrench-adjustable" style="font-size:3rem;color:#CC0000;"></i>
+                    </div>
+                </div>
+                <div class="modal-info-col">
+                    <h4 id="modalProductoNombre" class="fw-bold mb-1"></h4>
+                    <p id="modalProductoPrecio" class="modal-precio mb-1"></p>
+                    <div id="modalProductoEspecificaciones" class="mb-3"></div>
+                    <div id="modalProductoRecomendado" class="modal-recomendado mb-3"></div>
+                    <!-- Texto informativo fijo para todos los servicios de recarga/recambio -->
+                    <div class="modal-info-recarga mb-3">
+                        <i class="bi bi-info-circle-fill me-1"></i>
+                        Se recomienda la recarga/recambio de extintores cuando ya ha pasado más de un año
+                        de su última recarga. La normativa chilena exige la recarga una vez al año,
+                        para evitar problemas debido a la compresión del polvo químico en su interior.
+                    </div>
+                    <label for="cantidadProducto" class="form-label fw-semibold" style="font-size:0.88rem;">Cantidad</label>
+                    <input type="number" id="cantidadProducto" class="form-control form-control-sm mb-3"
+                           value="1" min="1" style="width:100px;">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" id="agregarCarritoBtn" class="btn btn-success btn-sm">
+                            <i class="bi bi-cart-plus"></i> Agregar al carrito
+                        </button>
+                        <button type="button" id="seguirComprandoBtn" class="btn btn-primary btn-sm">Seguir</button>
+                    </div>
+                    <small id="modalFeedback" class="d-block mt-2 fw-semibold"></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

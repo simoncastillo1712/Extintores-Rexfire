@@ -1,228 +1,334 @@
-**Datos de Admin**
+# 🔥 Extintores REXFIRE — Sistema de Gestión de Ventas + Chatbot IA
 
-**user: root** / 
-**contraseña: 1234**
+Sistema web completo para la gestión comercial de **Extintores REXFIRE**, empresa chilena certificada CESMEC dedicada a la venta, recarga, recambio e instalación de extintores de incendio.
 
-# Supermercado La Soa Juana.
-
-Aplicación web desarrollada con **Django** para gestión de supermercado, con:
-- sitio público para clientes,
-- administración interna (categorías, productos, clientes y proveedores),
-- carrito de compras en sesión,
-- buscadores y mejoras visuales en la página de inicio.
+Incluye tienda pública con carrito de compras, panel de administración, y **REXI**: un asistente de ventas con inteligencia artificial que opera vía chat en el sitio web y WhatsApp, con catálogo en tiempo real, generación de cotizaciones por email y seguimiento de conversaciones.
 
 ---
 
-## 1) ¿Qué hace este sitio?
+## ✨ Funcionalidades principales
 
-El sistema permite operar un supermercado con dos grandes áreas:
+### 🤖 REXI — Asistente de Ventas con IA (chatbot)
 
-### A. Área pública (sin login)
-- **Inicio (`/`)**
-  - Banner principal.
-  - Banner de **delivery** con descuentos por monto de compra.
-  - Sección de **productos destacados** con imágenes de los productos.
-  - Sección de **categorías**:
-    - muestra hasta 10 categorías.
-    - incluye barra de búsqueda (`cat_q`) para filtrar categorías en la misma home.
-  - Sección de **promociones** con tarjetas visuales.
-- **Listado de productos (`/listar_productos`)**
-  - Tarjetas de productos con imagen, precio y stock.
-  - Búsqueda por nombre de producto o categoría (`q`).
-  - Botón “Comprar” (integración con modal/carrito vía JS).
-- **Carrito (`/carrito/`)**
-  - Muestra productos agregados, cantidades y total.
-  - Persistencia en sesión.
+- **Chat flotante** en todas las páginas del sitio (esquina inferior derecha)
+- Venta guiada: recomienda el extintor exacto según uso, ambiente y normativa
+- **Catálogo en vivo** integrado con la base de datos — precios y stock siempre actualizados
+- Botón **"Agregar al carrito"** directamente en la respuesta del chatbot (1 o N productos a la vez)
+- **Acumulación de pedido**: recuerda todos los productos discutidos en la conversación
+- **Cotizaciones por email**: genera y envía una cotización detallada (HTML) al correo del cliente cuando lo solicita
+- Respuestas con tablas comparativas de productos renderizadas correctamente en el chat
+- Canal **WhatsApp** (Twilio Sandbox) para clientes que prefieren ese canal
+- Apertura automática a los 15 segundos con mensaje de bienvenida
+- Historial de sesión por usuario (no mezcla conversaciones entre clientes)
 
-### B. Área de gestión interna (requiere autenticación)
-- CRUD de:
-  - Categorías
-  - Productos
-  - Clientes
-  - Proveedores
-- Uso de mensajes de éxito/error en operaciones create/update/delete.
-- Pantallas y formularios administrativos en templates por módulo.
+### 🛒 Tienda pública (sin login)
+
+- Catálogo de extintores con modal de detalle: especificaciones técnicas y recomendaciones
+- Página de **Recargas y Servicios** (`/servicios/`) con información de normativa chilena anual
+- Búsqueda de productos por nombre o categoría
+- Carrito persistente en sesión, visible en todas las páginas
+- Precios en peso chileno (`$1.234.567`)
+
+### 👤 Autenticación de clientes
+
+- Identificación por **RUT** (sin contraseña)
+- Registro de nuevos clientes con datos completos
+- Menú desplegable con: **Mis datos**, **Mis compras**, **Cerrar sesión**
+- Edición de perfil (nombre, dirección, teléfono, email — RUT bloqueado)
+- Historial de compras con link a boleta imprimible
+
+### 💳 Flujo de compra
+
+- Checkout con detalle del pedido, datos del cliente y formas de pago
+- **Modal automático** al llegar al checkout cuando hay extintores nuevos:
+  - Sugiere gancho y señalética (1 por extintor nuevo)
+  - Modal regalo: instalación y capacitación sin costo incluidas en boleta
+- Badge **GRATIS** en ítems sin costo
+- Despacho calculado automáticamente según monto neto
+- Boleta descargable en PDF (impresión del navegador)
+- Campo **origen** en ventas: distingue si la compra provino del chatbot o la web directa
+
+### 🖥️ Panel de administración
+
+#### Inventario
+- CRUD completo de **Productos** con subida de imagen
+- CRUD de **Categorías** y **Proveedores**
+- Control de stock (oculto al público)
+
+#### Gestión Comercial
+- CRUD de **Clientes** con validación de RUT
+- CRUD de **Vendedores** con comisión automática del 20% sobre neto
+- **Nueva Venta** con precio editable por línea, selector de vendedor y alerta de despacho
+- Listado de ventas con detalle, boleta y asignación de vendedor post-venta
+- Reporte de comisiones por vendedor
+
+#### Chatbot — Panel de control
+- **Conversaciones**: historial completo de chats por cliente (web y WhatsApp)
+  - Estado manual: En consulta / Interesado / Cotización enviada / Concretada / **Abandonada**
+  - **Auto-abandono**: si el cliente estuvo interesado y no regresó en 3 días, cambia automáticamente
+  - **Botón "Recordar"**: envía mensaje de WhatsApp al cliente con carrito abandonado
+  - Notas internas por conversación
+- **Ventas por REXI**: reporte de ventas originadas desde el chatbot
+  - Total facturado, subtotal neto, IVA
+  - **Ahorro en comisiones**: muestra el 20% del neto que se habría pagado a un vendedor humano
 
 ---
 
-## 2) Funcionalidades destacadas implementadas
+## 🛠 Stack tecnológico
 
-- Corrección de visualización de imágenes en “Productos destacados” de inicio usando la imagen real del producto.
-- Mejoras UX/UI en home:
-  - banner delivery compacto, centrado.
-  - promociones en tarjetas al final de la página.
-- Búsqueda en home para categorías (`cat_q`) con límite de 10 resultados.
-- Búsqueda pública de productos por texto (`q`).
-- Manejo de archivos media para imágenes de productos (`MEDIA_URL` / `MEDIA_ROOT`).
+| Componente | Tecnología |
+|---|---|
+| Backend | Django 6.0.3 (Python 3.14) |
+| Base de datos | MySQL 8.0 + mysqlclient 2.2.8 |
+| IA / Chatbot | DeepSeek API (deepseek-chat, compatible OpenAI) |
+| WhatsApp | Twilio WhatsApp Sandbox |
+| Email | Gmail SMTP (App Password) |
+| Exposición local | Cloudflare Tunnel (`cloudflared`) |
+| Frontend | Bootstrap 5.3.2 + Bootstrap Icons 1.10.5 |
+| Imágenes | Pillow 12.2.0 |
+| Variables de entorno | python-dotenv |
+| Autenticación admin | Django Auth |
+| Autenticación cliente | Sesión Django (RUT) |
+| Filtros personalizados | `\|clp` (peso chileno), `\|despacho_neto` |
 
 ---
 
-## 3) Arquitectura y estructura del proyecto
+## ⚙️ Requisitos previos
 
-```text
-supermercado/
-├─ config/
-│  ├─ manage.py
-│  ├─ config/                  # configuración Django (settings, urls, wsgi, asgi)
-│  ├─ tienda/                  # app principal
-│  │  ├─ models.py             # modelos mapeados a BD existente
-│  │  ├─ views.py              # vistas públicas y privadas
-│  │  ├─ urls.py               # rutas de la app
-│  │  ├─ forms.py              # formularios de gestión
-│  │  ├─ templates/            # HTML (inicio, productos, carrito, auth, CRUDs)
-│  │  └─ static/               # CSS, JS e imágenes estáticas
-│  └─ media/                   # imágenes subidas (productos)
-├─ TODO.md
-└─ README.md
+- Python 3.10+
+- MySQL 8.0+
+- pip
+- Cuenta [DeepSeek](https://platform.deepseek.com) (chatbot IA)
+- Cuenta [Twilio](https://console.twilio.com) (WhatsApp, opcional)
+- Cuenta Gmail con Contraseña de Aplicación (cotizaciones, opcional)
+
+---
+
+## 🚀 Instalación
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/simoncastillo1712/supermercado-Soa-Juana.git
+cd supermercado-Soa-Juana
 ```
 
----
+### 2. Crear y activar entorno virtual
 
-## 4) Tecnologías usadas
-
-- Python 3.x
-- Django 6.0.3
-- MySQL (backend de base de datos)
-- HTML + CSS + JavaScript
-- Bootstrap (clases utilitarias y componentes visuales)
-
----
-
-## 5) Modelos principales (resumen)
-
-En `config/tienda/models.py` existen modelos mapeados a una BD existente (`managed = False`), entre ellos:
-
-- `Categoria`
-- `Producto` (incluye `imagen`, `precio`, `stock`, FK a categoría)
-- `Cliente`
-- `Proveedor`
-- `Compra` / `DetalleCompra`
-- `Venta` / `DetalleVenta`
-- `Factura` / `Boleta`
-- `TablaVistaFactura` (vista de BD)
-
-> Nota: al estar con `managed = False`, Django no administra creación/modificación de tablas por migraciones para esos modelos.
-
----
-
-## 6) Rutas y navegación (alto nivel)
-
-- `/` → inicio público
-- `/listar_productos` → catálogo público con búsqueda
-- `/carrito/` → vista de carrito
-- rutas de gestión (categorías/productos/clientes/proveedores) definidas en `config/tienda/urls.py`
-- autenticación de usuarios para acceso administrativo
-
----
-
-## 7) Configuración local (paso a paso)
-
-## Requisitos previos
-- Python 3.10+ (ideal 3.12/3.13)
-- MySQL Server activo
-- Base de datos `supermercado` creada y accesible
-
-## 1. Crear y activar entorno virtual
-En Windows (CMD):
 ```bash
 python -m venv venv
+
+# Windows
 venv\Scripts\activate
+
+# Linux / macOS
+source venv/bin/activate
 ```
 
-## 2. Instalar dependencias
+### 3. Instalar dependencias
+
 ```bash
 pip install -r requirements.txt
 ```
 
-## 3. Configurar base de datos
-En `config/config/settings.py` revisar bloque `DATABASES`:
-- ENGINE: `django.db.backends.mysql`
-- NAME: `supermercado`
-- USER/PASSWORD/HOST/PORT según tu entorno local.
+### 4. Configurar variables de entorno
 
-## 4. Ejecutar servidor
+```bash
+cp .env.example .env
+# Editar .env con tus credenciales reales
+```
+
+### 5. Configurar la base de datos
+
+Crear la base de datos en MySQL:
+
+```sql
+CREATE DATABASE extintores CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Editar `config/config/settings.py`:
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'extintores',
+        'USER': 'tu_usuario',
+        'PASSWORD': 'tu_contraseña',
+        'HOST': 'localhost',
+        'PORT': '3306',
+        'OPTIONS': {'charset': 'utf8mb4'},
+    }
+}
+```
+
+### 6. Aplicar migraciones
+
+```bash
+python config/manage.py migrate
+```
+
+### 7. Crear superusuario administrador
+
+```bash
+python config/manage.py createsuperuser
+```
+
+### 8. Cargar catálogo de productos y servicios
+
+```bash
+python config/manage.py cargar_productos_rexfire
+python config/manage.py cargar_servicios_rexfire
+```
+
+### 9. Iniciar el servidor
+
 ```bash
 python config/manage.py runserver
 ```
 
-Sitio disponible en:
-- http://127.0.0.1:8000/
+Acceder en: **http://127.0.0.1:8000**  
+Login admin: **http://127.0.0.1:8000/login_view**
 
 ---
 
-## 8) Archivos estáticos y media
+## 🌐 Webhook WhatsApp (Twilio + Cloudflare Tunnel)
 
-- `STATIC_URL = 'static/'`
-- `MEDIA_URL = '/media/'`
-- `MEDIA_ROOT = BASE_DIR / 'media'`
-
-En desarrollo, `config/config/urls.py` sirve media cuando `DEBUG=True`.
-
----
-
-## 9) Flujo funcional recomendado para pruebas manuales
-
-1. Abrir `/` y validar:
-   - banner principal,
-   - banner delivery compacto,
-   - productos destacados con imagen,
-   - categorías (máximo 10) y barra de búsqueda,
-   - tarjetas de promociones.
-2. Probar búsqueda de categorías en home:
-   - vacío,
-   - texto con resultados,
-   - texto sin resultados.
-3. Abrir `/listar_productos`:
-   - buscar productos con `q`,
-   - abrir modal/acción de compra.
-4. Abrir `/carrito/` y validar totales/items.
-5. Probar módulos administrativos con usuario autenticado.
-
----
-
-## 10) Seguridad y consideraciones importantes
-
-- `SECRET_KEY` no debe exponerse en producción.
-- `DEBUG` debe ser `False` en producción.
-- Definir `ALLOWED_HOSTS` apropiado para despliegue.
-- Usar variables de entorno para credenciales sensibles (BD, secret key).
-
----
-
-## 11) Estado actual de la UI de inicio
-
-La página de inicio incluye:
-- diseño mejorado y secciones visuales consistentes,
-- delivery destacado con descuentos por tramos,
-- promociones inventadas para atraer conversión,
-- categorización y acceso rápido a catálogo.
-
----
-
-## 12) Posibles mejoras futuras
-
-- Checkout completo con creación formal de ventas/facturas.
-- Integración de pasarela de pago.
-- Panel analítico (ventas por período, top productos).
-- Paginación y filtros avanzados en catálogo público.
-- Tests automáticos (`pytest` / `django test`) para vistas y lógica de carrito.
-- Internacionalización (`es-CL`) y formato moneda local.
-
----
-
-## 13) Comandos útiles
+Para habilitar el chatbot por WhatsApp en desarrollo local:
 
 ```bash
-# checks Django
-python config/manage.py check
-
-# servidor
+# Terminal 1: servidor Django
 python config/manage.py runserver
 
-# crear superusuario (si aplica)
+# Terminal 2: túnel público
+cloudflared tunnel --url http://localhost:8000
+```
+
+Copiar la URL generada (ej: `https://xxxx.trycloudflare.com`) y configurarla en la consola de Twilio:
+- **Webhook URL**: `https://xxxx.trycloudflare.com/whatsapp/webhook/`
+- **Método**: POST
+
+Para unirse al sandbox de WhatsApp: enviar `join iron-balance` a **+1 415 523 8886**
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+tienda/
+├── .env.example               # Plantilla de variables de entorno
+├── .gitignore
+├── requirements.txt
+├── README.md
+└── config/
+    ├── manage.py
+    ├── config/                        # Configuración Django
+    │   ├── settings.py               # DB, email, API keys desde .env
+    │   ├── urls.py
+    │   └── wsgi.py
+    ├── media/                         # Imágenes de productos (subidas)
+    └── tienda/                        # App principal
+        ├── models.py                  # Producto, Venta, Vendedor, Cliente,
+        │                              #   ConversacionWhatsapp, ConversacionEstado
+        ├── views.py                   # Todas las vistas (tienda, admin, chatbot)
+        ├── urls.py                    # Rutas URL
+        ├── forms.py
+        ├── context_processors.py      # Contador de carrito global
+        ├── chatbot/
+        │   ├── agente.py             # Lógica IA: catálogo en vivo, prompt, acumulación
+        │   └── cotizacion.py         # Generación y envío de cotizaciones por email
+        ├── management/
+        │   └── commands/
+        │       ├── cargar_productos_rexfire.py
+        │       └── cargar_servicios_rexfire.py
+        ├── migrations/
+        ├── templatetags/
+        │   └── rexfire_filters.py    # |clp (peso chileno), |despacho_neto
+        ├── static/
+        │   ├── css/style.css         # Estilos + chat widget flotante
+        │   └── js/script.js          # Chat REXI: formatMessage, tablas, botones carrito
+        └── templates/
+            ├── base.html             # Navbar, widget REXI flotante, footer
+            ├── inicio.html
+            ├── auth/
+            ├── carrito/              # ver.html, checkout.html
+            ├── chatbot/
+            │   ├── lista.html        # Lista de conversaciones con estado
+            │   ├── detalle.html      # Hilo de chat + panel de estado/notas
+            │   └── ventas_chatbot.html  # Reporte ventas + ahorro comisiones
+            ├── clientes/
+            ├── productos/
+            ├── proveedores/
+            ├── servicios/
+            ├── ventas/               # nueva, cotizacion, listado, detalle
+            └── vendedores/           # listado, form, comisiones
+```
+
+---
+
+## 💰 Reglas de negocio
+
+| Concepto | Valor |
+|---|---|
+| IVA | 19% |
+| Despacho Santiago — sobre $300.000 neto | **Gratis** |
+| Despacho Santiago — $50.000 a $300.000 neto | $6.800 + IVA |
+| Mínimo para despacho | $50.000 neto |
+| Comisión vendedor humano | 20% del neto |
+| Comisión REXI (chatbot) | **$0** |
+| Ahorro estimado con REXI | 20% del neto (lo que habría cobrado un vendedor) |
+| Regalo por compra de extintores nuevos | Instalación + Capacitación sin costo |
+| Accesorios sugeridos por extintor nuevo | 1 Gancho ($2.000) + 1 Señalética ($1.200) |
+| Auto-abandono de conversación | 3 días sin actividad en estado "Interesado" |
+
+---
+
+## 🧪 Comandos útiles
+
+```bash
+# Iniciar servidor
+python config/manage.py runserver
+
+# Verificar configuración
+python config/manage.py check
+
+# Ver migraciones aplicadas
+python config/manage.py showmigrations tienda
+
+# Cargar catálogo
+python config/manage.py cargar_productos_rexfire
+python config/manage.py cargar_servicios_rexfire
+
+# Crear superusuario
 python config/manage.py createsuperuser
 ```
 
 ---
 
-Documentación preparada para dejar el proyecto listo para uso académico/taller y continuación de desarrollo.
+## 🔐 Seguridad para producción
+
+```python
+# settings.py
+DEBUG = False
+SECRET_KEY = os.environ.get('SECRET_KEY')
+ALLOWED_HOSTS = ['tu-dominio.cl']
+```
+
+Nunca subas el archivo `.env` al repositorio. Usa el archivo `.env.example` como referencia.
+
+---
+
+## 📞 Información de la empresa
+
+**Extintores REXFIRE**  
+Santa Gemita 909 L.202B, Maipú  
++569 7555 5423  
+extintoresrexfire@gmail.com  
+RUT: 77.995.139-1  
+Certificado CESMEC
+
+---
+
+## 📄 Licencia
+
+Proyecto de uso privado — © Extintores REXFIRE. Todos los derechos reservados.

@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% load rexfire_filters %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Confirmar Pedido</h2>
+    <a href="{% url 'ver_carrito' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver al carrito
+    </a>
+</div>
+
+<div class="row g-4">
+
+    <!-- Datos del cliente -->
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-fill text-primary"></i> Datos del cliente</span>
+                <a href="{% url 'cliente_login' %}?next={% url 'checkout' %}" class="btn btn-outline-secondary btn-sm" style="font-size:0.75rem;">Cambiar</a>
+            </div>
+            <div class="card-body" style="font-size:0.9rem;">
+                <p class="mb-1"><strong>{{ cliente.razon_social }}</strong></p>
+                <p class="mb-1 text-muted">RUT: {{ cliente.rut_cliente }}</p>
+                {% if cliente.direccion %}
+                <p class="mb-1 text-muted"><i class="bi bi-geo-alt"></i> {{ cliente.direccion }}</p>
+                {% endif %}
+                {% if cliente.telefono %}
+                <p class="mb-1 text-muted"><i class="bi bi-telephone"></i> {{ cliente.telefono }}</p>
+                {% endif %}
+                {% if cliente.email %}
+                <p class="mb-0 text-muted"><i class="bi bi-envelope"></i> {{ cliente.email }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Detalle del pedido -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-bag-fill text-primary"></i> Detalle del pedido
+            </div>
+            <div class="card-body p-0">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Cant.</th>
+                            <th class="text-end">Precio unit.</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.producto.nombre }}</strong>
+                                {% if item.producto.precio == 0 %}
+                                <span class="badge ms-1" style="background:#16a34a;color:#fff;font-size:0.68rem;vertical-align:middle;">GRATIS</span>
+                                {% endif %}
+                                <div class="text-muted" style="font-size:0.78rem;">Precio neto + IVA</div>
+                            </td>
+                            <td class="text-center">{{ item.cantidad }}</td>
+                            <td class="text-end">${{ item.producto.precio|clp }}</td>
+                            <td class="text-end fw-semibold">${{ item.subtotal|clp }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <div class="row justify-content-end">
+                    <div class="col-sm-5">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <td class="text-muted">Subtotal neto:</td>
+                                <td class="text-end">${{ neto|clp }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">IVA (19%):</td>
+                                <td class="text-end">${{ iva|clp }}</td>
+                            </tr>
+                            <tr class="fw-bold fs-5">
+                                <td class="text-danger">TOTAL:</td>
+                                <td class="text-end text-danger">${{ total|clp }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de pago -->
+        <div class="card shadow-sm mt-3">
+            <div class="card-body" style="font-size:0.85rem;">
+                <h6 class="fw-bold mb-2"><i class="bi bi-info-circle text-primary"></i> Formas de pago</h6>
+                <p class="mb-1">💳 <strong>Transferencia / Efectivo</strong> — sin recargo</p>
+                <p class="mb-1">💳 <strong>Tarjeta / Redcompra</strong> — +1.5% adicional</p>
+                <p class="mb-0 text-muted">RUT: 77.995.139-1 &nbsp;|&nbsp; Cta. Vista Mercado Pago N° 1046537846</p>
+            </div>
+        </div>
+
+        <!-- Confirmar -->
+        <form method="POST" class="mt-4 text-end">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-lg px-5 fw-semibold">
+                <i class="bi bi-check-circle-fill"></i> Confirmar Compra
+            </button>
+            <div class="text-muted mt-2" style="font-size:0.8rem;">
+                Al confirmar se generará tu boleta electrónica
+            </div>
+        </form>
+    </div>
+
+</div>
+
+{% if extintores_nuevos > 0 and gancho_id and senialetica_id %}
+
+<!-- ── Modal 1: ¿Tienes gancho y señalética? ── -->
+<div class="modal fade" id="modalAccesorios" tabindex="-1" aria-labelledby="modalAccesoriosLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#fff8e1;border-bottom:1px solid #ffe082;">
+                <h5 class="modal-title fw-bold" id="modalAccesoriosLabel">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    ¿Tienes gancho y señalética?
+                </h5>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Estás comprando <strong>{{ extintores_nuevos }} extintor{% if extintores_nuevos > 1 %}es{% endif %} nuevo{% if extintores_nuevos > 1 %}s{% endif %}</strong>.
+                    Para instalarlo correctamente necesitas:
+                </p>
+                <ul class="mb-3">
+                    <li><strong>{{ extintores_nuevos }} Gancho extintor</strong> — $2.000 c/u</li>
+                    <li><strong>{{ extintores_nuevos }} Señalética extintor</strong> — $1.200 c/u</li>
+                </ul>
+                <div class="alert alert-info py-2 mb-0" style="font-size:0.85rem;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    La normativa chilena exige que cada extintor esté correctamente instalado con su señalética visible.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="btnNoAccesorios">
+                    No, gracias
+                </button>
+                <button type="button" class="btn btn-success fw-semibold" id="btnSiAccesorios">
+                    <i class="bi bi-plus-circle"></i> Sí, agregar al carrito
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal 2: ¡Regalo por preferir REXFIRE! ── -->
+<div class="modal fade" id="modalRegalo" tabindex="-1" aria-labelledby="modalRegaloLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius:18px;overflow:hidden;">
+            <!-- Header festivo -->
+            <div class="modal-header text-white justify-content-center border-0 py-4"
+                 style="background:linear-gradient(135deg,#CC0000 0%,#FF4444 100%);">
+                <div class="text-center">
+                    <div style="font-size:3.5rem;line-height:1;">🎁</div>
+                    <h4 class="modal-title fw-bold mt-2 mb-0" id="modalRegaloLabel">
+                        ¡Tenemos una sorpresa para ti!
+                    </h4>
+                </div>
+            </div>
+            <div class="modal-body text-center px-4 py-4">
+                <p class="fs-5 fw-semibold mb-1">¡Gracias por preferirnos!</p>
+                <p class="text-muted mb-4" style="font-size:0.95rem;">
+                    Como agradecimiento por tu compra, te regalamos <strong>sin ningún costo</strong>:
+                </p>
+
+                <!-- Servicios regalo -->
+                <div class="d-flex flex-column gap-3 mb-4">
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 text-start"
+                         style="background:#f0fff4;border:1.5px solid #a7f3d0;">
+                        <span style="font-size:2rem;">🔧</span>
+                        <div>
+                            <div class="fw-bold" style="color:#065f46;">Instalación de extintores</div>
+                            <div class="text-muted" style="font-size:0.83rem;">
+                                Instalamos todos tus extintores nuevos en tu local o empresa.
+                            </div>
+                        </div>
+                        <span class="ms-auto badge bg-success">GRATIS</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 text-start"
+                         style="background:#f0fff4;border:1.5px solid #a7f3d0;">
+                        <span style="font-size:2rem;">🎓</span>
+                        <div>
+                            <div class="fw-bold" style="color:#065f46;">Capacitación al equipo</div>
+                            <div class="text-muted" style="font-size:0.83rem;">
+                                Capacitamos a tu personal sobre el uso correcto de los extintores.
+                            </div>
+                        </div>
+                        <span class="ms-auto badge bg-success">GRATIS</span>
+                    </div>
+                </div>
+
+                <p class="text-muted" style="font-size:0.82rem;">
+                    Estos servicios quedarán incluidos en tu boleta sin costo adicional.<br>
+                    Coordinaremos contigo la fecha de instalación y capacitación.
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-primary btn-lg px-5 fw-bold" id="btnCerrarRegalo">
+                    🎉 ¡Genial, gracias!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const MODAL_KEY = 'accesorios_modal_{{ extintores_nuevos }}_shown';
+
+    function getCsrf() {
+        const c = document.cookie.split(';').find(x => x.trim().startsWith('csrftoken='));
+        return c ? decodeURIComponent(c.split('=')[1]) : '';
+    }
+
+    function agregarAlCarrito(productoId, cantidad) {
+        return fetch('/carrito/agregar/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+            body: JSON.stringify({ producto_id: String(productoId), cantidad: cantidad })
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!sessionStorage.getItem(MODAL_KEY)) {
+            sessionStorage.setItem(MODAL_KEY, '1');
+            new bootstrap.Modal(document.getElementById('modalAccesorios')).show();
+        }
+
+        document.getElementById('btnNoAccesorios').addEventListener('click', function () {
+            bootstrap.Modal.getInstance(document.getElementById('modalAccesorios')).hide();
+        });
+
+        document.getElementById('btnSiAccesorios').addEventListener('click', function () {
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Agregando...';
+
+            // 1. Gancho → 2. Señalética → 3. Instalación → 4. Capacitación (secuencial)
+            agregarAlCarrito('{{ gancho_id }}', {{ extintores_nuevos }})
+                .then(() => agregarAlCarrito('{{ senialetica_id }}', {{ extintores_nuevos }}))
+                {% if instalacion_id %}
+                .then(() => agregarAlCarrito('{{ instalacion_id }}', 1))
+                {% endif %}
+                {% if capacitacion_id %}
+                .then(() => agregarAlCarrito('{{ capacitacion_id }}', 1))
+                {% endif %}
+                .then(function () {
+                    // Ocultar modal 1 y mostrar modal regalo
+                    bootstrap.Modal.getInstance(document.getElementById('modalAccesorios')).hide();
+                    document.getElementById('modalAccesorios').addEventListener('hidden.bs.modal', function () {
+                        new bootstrap.Modal(document.getElementById('modalRegalo')).show();
+                    }, { once: true });
+                })
+                .catch(function () {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-plus-circle"></i> Sí, agregar al carrito';
+                    alert('Ocurrió un error al agregar los accesorios. Intenta nuevamente.');
+                });
+        });
+
+        // Al cerrar el modal regalo → recargar para mostrar carrito actualizado
+        document.getElementById('btnCerrarRegalo').addEventListener('click', function () {
+            bootstrap.Modal.getInstance(document.getElementById('modalRegalo')).hide();
+        });
+        document.getElementById('modalRegalo').addEventListener('hidden.bs.modal', function () {
+            window.location.reload();
+        });
+    });
+})();
+</script>
+{% endif %}
+
+{% endblock %}

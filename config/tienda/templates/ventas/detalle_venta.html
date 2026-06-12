@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static rexfire_filters %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Detalle de Venta</h2>
+  <a href="{% url 'listar_ventas' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+</div>
+
+<div class="row g-4">
+
+  <!-- Info documento y cliente -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-file-text text-primary"></i> Documento
+      </div>
+      <div class="card-body" style="font-size:0.9rem;">
+        <p class="mb-1">
+          <strong>Tipo:</strong>
+          <span class="badge {% if tipo == 'Boleta' %}bg-primary{% else %}bg-warning text-dark{% endif %} ms-1">
+            {{ tipo }}
+          </span>
+        </p>
+        <p class="mb-1"><strong>N°:</strong> {{ numero }}</p>
+        <p class="mb-1"><strong>Fecha:</strong> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
+        <p class="mb-0"><strong>ID Venta:</strong> #{{ venta.id_venta }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-person-fill text-primary"></i> Cliente
+      </div>
+      <div class="card-body" style="font-size:0.9rem;">
+        {% if cliente %}
+          <p class="mb-1"><strong>{{ cliente.razon_social }}</strong></p>
+          <p class="mb-1 text-muted">RUT: {{ cliente.rut_cliente }}</p>
+          {% if cliente.direccion %}<p class="mb-1 text-muted">{{ cliente.direccion }}</p>{% endif %}
+          {% if cliente.telefono %}<p class="mb-1 text-muted"><i class="bi bi-telephone"></i> {{ cliente.telefono }}</p>{% endif %}
+          {% if cliente.email %}<p class="mb-0 text-muted"><i class="bi bi-envelope"></i> {{ cliente.email }}</p>{% endif %}
+        {% elif nombre_cliente %}
+          <p class="mb-1"><strong>{{ nombre_cliente }}</strong></p>
+        {% else %}
+          <p class="text-muted mb-0">Sin datos de cliente.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendedor -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-person-badge text-primary"></i> Vendedor
+      </div>
+      <div class="card-body" style="font-size:0.9rem;">
+        {% if info and info.id_vendedor %}
+          <p class="mb-1"><strong>{{ info.id_vendedor.nombre }}</strong></p>
+          <p class="mb-1 text-muted">RUT: {{ info.id_vendedor.rut }}</p>
+          <p class="mb-1">Neto venta: <strong>${{ info.neto|clp }}</strong></p>
+          <p class="mb-0">Comisión (20%): <span class="text-success fw-bold">${{ info.comision|clp }}</span></p>
+        {% else %}
+          <p class="text-muted mb-3" style="font-size:0.85rem;">Sin vendedor asignado.</p>
+          {% if vendedores_disponibles %}
+          <form method="post" action="{% url 'asignar_vendedor' venta.id_venta %}" class="d-flex gap-2 align-items-end flex-wrap">
+            {% csrf_token %}
+            <div class="flex-grow-1">
+              <label class="form-label fw-semibold mb-1" style="font-size:0.82rem;">Asignar vendedor</label>
+              <select name="vendedor_id" class="form-control form-control-sm" required>
+                <option value="">— Selecciona —</option>
+                {% for v in vendedores_disponibles %}
+                <option value="{{ v.id_vendedor }}">{{ v.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-person-check"></i> Asignar
+            </button>
+          </form>
+          {% else %}
+          <p class="text-muted mb-0" style="font-size:0.82rem;">No hay vendedores activos registrados.</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Productos -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-bag-fill text-primary"></i> Productos y Servicios
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Producto / Servicio</th>
+              <th class="text-center">Cant.</th>
+              <th class="text-end">Precio Unit.</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in detalles %}
+            <tr>
+              <td>
+                {{ d.id_producto.nombre }}
+                {% if d.precio_unitario == 0 %}
+                <span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:1px 6px;font-size:0.73rem;font-weight:700;margin-left:4px;">GRATIS</span>
+                {% endif %}
+              </td>
+              <td class="text-center">{{ d.cantidad }}</td>
+              {% if d.precio_unitario == 0 %}
+              <td class="text-end text-success">$0</td>
+              <td class="text-end text-success">$0</td>
+              {% else %}
+              <td class="text-end">${{ d.precio_unitario|clp }}</td>
+              <td class="text-end fw-semibold">${{ d.subtotal|clp }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer">
+        <div class="row justify-content-end">
+          <div class="col-sm-5">
+            <table class="table table-sm mb-0">
+              <tr>
+                <td class="text-muted">Subtotal neto:</td>
+                <td class="text-end">${{ neto|clp }}</td>
+              </tr>
+              {% if despacho_tipo == 'cobro' %}
+              <tr>
+                <td class="text-muted">Despacho neto:</td>
+                <td class="text-end">${{ despacho_neto|clp }}</td>
+              </tr>
+              {% elif despacho_tipo == 'gratis' %}
+              <tr>
+                <td class="text-muted">Despacho:</td>
+                <td class="text-end text-success fw-bold">GRATIS</td>
+              </tr>
+              {% endif %}
+              <tr>
+                <td class="text-muted">IVA (19%):</td>
+                <td class="text-end">${{ iva|clp }}</td>
+              </tr>
+              <tr class="fw-bold">
+                <td class="text-danger">TOTAL:</td>
+                <td class="text-end text-danger">${{ total_final|clp }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="mt-4 no-print">
+  <a href="{% url 'ver_cotizacion' venta.id_venta %}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-printer"></i> Ver / Imprimir Cotización
+  </a>
+</div>
+
+{% endblock %}

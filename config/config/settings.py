@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Carga el .env desde la raíz del proyecto (tienda/)
+load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +29,7 @@ SECRET_KEY = 'django-insecure-96m@+e%4r+kqa^c1x2a$97-zfd5t0!-z574gu10ec@sxo%lt1%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.trycloudflare.com']
 
 
 # Application definition
@@ -59,9 +63,11 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'tienda.context_processors.carrito_count',
             ],
         },
     },
@@ -76,11 +82,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'supermercado',
+        'NAME': 'extintores',
         'USER': 'root',
         'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '3306',
+        'OPTIONS': {'charset': 'utf8mb4'},
     }
 }
 
@@ -121,5 +128,25 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+LOGIN_URL = '/login_view'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# DeepSeek / Twilio (leídos desde .env)
+import os
+DEEPSEEK_API_KEY  = os.getenv('DEEPSEEK_API_KEY', '')
+DEEPSEEK_MODEL    = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
+DEEPSEEK_BASE_URL = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
+TWILIO_ACCOUNT_SID      = os.getenv('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN       = os.getenv('TWILIO_AUTH_TOKEN', '')
+TWILIO_WHATSAPP_FROM    = os.getenv('TWILIO_WHATSAPP_FROM', '')
+
+# Email (Gmail SMTP)
+EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST          = 'smtp.gmail.com'
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL  = f"Extintores REXFIRE <{os.getenv('EMAIL_HOST_USER', 'extintoresrexfire@gmail.com')}>"

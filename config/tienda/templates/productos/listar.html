@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static rexfire_filters %}
 {% block contenido%}
-<h1>Supermercado La Soa Juana</h1>
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Productos</h2>
     <a href="{% url 'ver_carrito' %}" class="btn btn-primary position-relative">
@@ -29,17 +28,38 @@
 
     {% for producto in productos %}
     <div class="col-md-4">
-        <div class="card text-bg-primary mb-3 p-2 producto-card" data-id="{{ producto.id_producto }}"
-            data-nombre="{{ producto.nombre }}" data-precio="{{ producto.precio }}" data-stock="{{ producto.stock }}"
+        <div class="card border mb-3 producto-card"
+            data-id="{{ producto.id_producto }}"
+            data-nombre="{{ producto.nombre }}"
+            data-precio="{{ producto.precio }}"
+            data-stock="{{ producto.stock }}"
+            data-descripcion="{{ producto.descripcion|default:'' }}"
             data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
             {% if producto.imagen %}
             <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
+            {% else %}
+            <div class="card-img-placeholder d-flex align-items-center justify-content-center bg-light">
+                <i class="bi bi-fire text-danger" style="font-size:3rem;"></i>
+            </div>
             {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ producto.nombre }}</h5>
-                <p class="card-text">$ {{ producto.precio }}</p>
-                <p class="card-text">Stock: {{ producto.stock }} UNI</p>
-                <button type="button" class="btn btn-success btn-comprar">Comprar</button>
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title fw-bold mb-1">{{ producto.nombre }}</h5>
+                <p class="card-text text-primary fw-semibold mb-1" style="font-size:1.1rem;">
+                    ${{ producto.precio|clp }} <small class="text-muted fw-normal">+ IVA</small>
+                </p>
+                {% if producto.descripcion %}
+                <p class="card-text text-muted mb-3" style="font-size:0.8rem;">
+                    {{ producto.descripcion|truncatechars:60 }}
+                </p>
+                {% endif %}
+                <div class="mt-auto d-flex gap-2 align-items-center">
+                    <button type="button" class="btn btn-success btn-sm btn-comprar flex-grow-1">
+                        <i class="bi bi-cart-plus"></i> Comprar
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-ver-detalle" title="Ver detalle">
+                        <i class="bi bi-info-circle"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -48,28 +68,33 @@
 </div>
 
 <div id="productoModal" class="producto-modal-overlay" aria-hidden="true">
-    <div class="producto-modal modal-dialog-visible" role="dialog" aria-modal="true"
-        aria-labelledby="modalProductoNombre">
-        <button type="button" class="producto-modal-close" id="cerrarModalBtn"
-            aria-label="Cerrar modal">&times;</button>
+    <div class="producto-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductoNombre">
+        <button type="button" class="producto-modal-close" id="cerrarModalBtn" aria-label="Cerrar modal">&times;</button>
         <div class="producto-modal-body">
-            <img id="modalProductoImagen" class="producto-modal-img" src="" alt="Imagen producto">
-            <h3 id="modalProductoNombre" class="mb-2"></h3>
-            <p id="modalProductoPrecio" class="mb-1"></p>
-            <p id="modalProductoStock" class="mb-3"></p>
-            <label for="cantidadProducto" class="form-label">Cantidad (1 a 5)</label>
-            <select id="cantidadProducto" class="form-control mb-3">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-            </select>
-            <div class="d-flex flex-wrap gap-2">
-                <button type="button" id="agregarCarritoBtn" class="btn btn-success">Agregar al carrito</button>
-                <button type="button" id="seguirComprandoBtn" class="btn btn-primary">Seguir comprando</button>
+            <div class="modal-layout">
+                <div class="modal-img-col">
+                    <img id="modalProductoImagen" class="producto-modal-img" src="" alt="Imagen producto">
+                    <div id="modalImgPlaceholder" class="modal-img-placeholder" style="display:none;">
+                        <i class="bi bi-fire"></i>
+                    </div>
+                </div>
+                <div class="modal-info-col">
+                    <h4 id="modalProductoNombre" class="fw-bold mb-1"></h4>
+                    <p id="modalProductoPrecio" class="modal-precio mb-1"></p>
+                    <div id="modalProductoEspecificaciones" class="mb-3"></div>
+                    <div id="modalProductoRecomendado" class="modal-recomendado mb-3"></div>
+                    <label for="cantidadProducto" class="form-label fw-semibold" style="font-size:0.88rem;">Cantidad</label>
+                    <input type="number" id="cantidadProducto" class="form-control form-control-sm mb-3"
+                           value="1" min="1" style="width:100px;">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" id="agregarCarritoBtn" class="btn btn-success btn-sm">
+                            <i class="bi bi-cart-plus"></i> Agregar al carrito
+                        </button>
+                        <button type="button" id="seguirComprandoBtn" class="btn btn-primary btn-sm">Seguir comprando</button>
+                    </div>
+                    <small id="modalFeedback" class="d-block mt-2 fw-semibold"></small>
+                </div>
             </div>
-            <small id="modalFeedback" class="d-block mt-2"></small>
         </div>
     </div>
 </div>

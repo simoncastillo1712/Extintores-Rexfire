@@ -1,0 +1,55 @@
+# =====================================================
+#  EXTINTORES REXFIRE — .gitignore
+# =====================================================
+
+# Variables de entorno (NUNCA commitear — contiene API keys y contraseñas)
+.env
+.env.local
+.env.production
+
+# Bytecode Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Logs
+*.log
+django.log
+cloudflared.log
+
+# Media uploads (archivos subidos por usuarios — no van en git)
+config/media/
+
+# Archivos de distribución / empaquetado
+*.egg-info/
+dist/
+build/
+*.egg
+MANIFEST
+
+# Entorno virtual (venv ya tiene su propio .gitignore interno)
+venv/
+env/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Cloudflare
+cloudflared.exe

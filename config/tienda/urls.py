@@ -2,8 +2,18 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('whatsapp/webhook/', views.webhook_whatsapp, name='webhook_whatsapp'),
+    path('agregar_rapido/<int:producto_id>/', views.agregar_rapido, name='agregar_rapido'),
+    path('agregar_multiples/', views.agregar_multiples, name='agregar_multiples'),
+    path('chat/', views.chatbot_web, name='chatbot_web'),
+    path('chatbot/ventas/', views.listar_ventas_chatbot, name='listar_ventas_chatbot'),
+    path('chatbot/conversaciones/', views.listar_conversaciones, name='listar_conversaciones'),
+    path('chatbot/conversaciones/detalle/', views.detalle_conversacion, name='detalle_conversacion'),
+    path('chatbot/conversaciones/estado/', views.actualizar_estado_conversacion, name='actualizar_estado_conversacion'),
+    path('chatbot/conversaciones/recordatorio/', views.enviar_recordatorio_whatsapp, name='enviar_recordatorio_whatsapp'),
     path('', views.inicio, name='inicio'),
     path('listar_productos', views.listar_productos, name='listar_productos'),
+    path('servicios/', views.listar_servicios, name='listar_servicios'),
     path('login_view', views.login_view, name='login_view'),
     path('logout_view', views.logout_view, name='logout_view'),
     path('carrito/', views.ver_carrito, name='ver_carrito'),
@@ -32,5 +42,28 @@ urlpatterns = [
     path('crear_producto/', views.crear_producto, name='crear_producto'),
     path('editar_producto/<int:id>/', views.editar_producto, name='editar_producto'),
     path('eliminar_producto/<int:id>/', views.eliminar_producto, name='eliminar_producto'),
-    
+
+    # VENTAS Y COTIZACIONES
+    path('nueva_venta/', views.nueva_venta, name='nueva_venta'),
+    path('cotizacion/<int:venta_id>/', views.ver_cotizacion, name='ver_cotizacion'),
+
+    # AUTENTICACIÓN Y COMPRA DE CLIENTES
+    path('cliente/login/',    views.cliente_login,          name='cliente_login'),
+    path('cliente/registro/', views.cliente_registro,       name='cliente_registro'),
+    path('cliente/logout/',   views.cliente_logout_view,    name='cliente_logout'),
+    path('cliente/perfil/',   views.editar_perfil_cliente,  name='editar_perfil_cliente'),
+    path('cliente/historial/', views.historial_compras,     name='historial_compras'),
+    path('carrito/checkout/', views.checkout,               name='checkout'),
+
+    # VENTAS
+    path('ventas/',                views.listar_ventas,   name='listar_ventas'),
+    path('ventas/<int:venta_id>/', views.detalle_venta,          name='detalle_venta'),
+    path('ventas/<int:venta_id>/asignar-vendedor/', views.asignar_vendedor, name='asignar_vendedor'),
+
+    # VENDEDORES
+    path('vendedores/',                        views.listar_vendedores,    name='listar_vendedores'),
+    path('vendedores/crear/',                  views.crear_vendedor,       name='crear_vendedor'),
+    path('vendedores/editar/<int:id>/',        views.editar_vendedor,      name='editar_vendedor'),
+    path('vendedores/eliminar/<int:id>/',      views.eliminar_vendedor,    name='eliminar_vendedor'),
+    path('vendedores/comisiones/<int:id>/',    views.comisiones_vendedor,  name='comisiones_vendedor'),
 ]

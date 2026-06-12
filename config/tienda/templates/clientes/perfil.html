@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block contenido %}
+
+<div class="row justify-content-center mt-2 mb-5">
+  <div class="col-md-6">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-bold mb-0">Mis datos</h2>
+      <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-sm">← Inicio</a>
+    </div>
+
+    <!-- RUT (solo lectura) -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <label class="form-label fw-semibold text-muted" style="font-size:0.82rem;">RUT (no editable)</label>
+        <p class="fw-bold mb-0" style="font-size:1.1rem;">{{ cliente.rut_cliente }}</p>
+      </div>
+    </div>
+
+    <!-- Formulario editable -->
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-pencil-fill text-primary me-2"></i>Editar mis datos
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <div class="text-danger mt-1" style="font-size:0.85rem;">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+          <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-primary fw-semibold">
+              <i class="bi bi-floppy"></i> Guardar cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="{% url 'historial_compras' %}" class="text-muted" style="font-size:0.85rem;">
+        <i class="bi bi-clock-history"></i> Ver mis compras
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

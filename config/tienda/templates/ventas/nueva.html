@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Nueva Venta / Cotización</h2>
+  <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+</div>
+
+<form method="POST" id="formNuevaVenta">
+  {% csrf_token %}
+
+  <!-- VENDEDOR -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header fw-semibold">Vendedor responsable</div>
+    <div class="card-body">
+      <select name="vendedor_id" class="form-control" style="max-width:400px;">
+        <option value="">— Sin vendedor asignado —</option>
+        {% for v in vendedores %}
+        <option value="{{ v.id_vendedor }}">{{ v.nombre }}</option>
+        {% endfor %}
+      </select>
+      <small class="text-muted">La comisión del 20% se calculará sobre el neto de la venta.</small>
+    </div>
+  </div>
+
+  <!-- TIPO DE DOCUMENTO -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header fw-semibold">Tipo de Documento</div>
+    <div class="card-body">
+      <div class="d-flex gap-4">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="tipo_documento" id="tipoBoleta" value="boleta" checked>
+          <label class="form-check-label fw-semibold" for="tipoBoleta">Boleta</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="tipo_documento" id="tipoFactura" value="factura">
+          <label class="form-check-label fw-semibold" for="tipoFactura">Factura</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATOS DEL CLIENTE -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header fw-semibold">Datos del Cliente</div>
+    <div class="card-body">
+      <div class="d-flex gap-4 mb-3">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="cliente_mode" id="modeNuevo" value="new" checked>
+          <label class="form-check-label" for="modeNuevo">Nuevo cliente</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="cliente_mode" id="modeExistente" value="existing">
+          <label class="form-check-label" for="modeExistente">Cliente existente</label>
+        </div>
+      </div>
+      <div id="seccionNuevo">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">RUT <span class="text-danger">*</span></label>
+            <input type="text" name="nuevo_rut" class="form-control" placeholder="12.345.678-9">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label fw-semibold">Nombre / Razón Social <span class="text-danger">*</span></label>
+            <input type="text" name="nuevo_nombre" class="form-control" placeholder="Juan Pérez o Empresa S.A.">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Dirección</label>
+            <input type="text" name="nuevo_direccion" class="form-control" placeholder="Calle 123, Ciudad">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Teléfono</label>
+            <input type="text" name="nuevo_telefono" class="form-control" placeholder="+569 XXXX XXXX">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Correo</label>
+            <input type="email" name="nuevo_email" class="form-control" placeholder="correo@ejemplo.cl">
+          </div>
+        </div>
+      </div>
+      <div id="seccionExistente" style="display:none;">
+        <label class="form-label fw-semibold">Seleccionar cliente</label>
+        <select name="cliente_id" class="form-control">
+          <option value="">-- Seleccione un cliente --</option>
+          {% for c in clientes %}
+          <option value="{{ c.id_cliente }}">{{ c.razon_social }} — {{ c.rut_cliente }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCTOS Y SERVICIOS -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+      Productos y Servicios
+      <button type="button" id="btnAgregarProducto" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg"></i> Agregar ítem
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th style="min-width:260px;">Producto / Servicio</th>
+              <th style="width:160px;">
+                Precio Unit. (neto)
+                <small class="d-block fw-normal text-warning" style="font-size:0.7rem;">Editable</small>
+              </th>
+              <th style="width:100px;">Cantidad</th>
+              <th style="width:130px;">Subtotal</th>
+              <th style="width:50px;"></th>
+            </tr>
+          </thead>
+          <tbody id="productosBody"></tbody>
+        </table>
+      </div>
+      <div class="px-3 py-2 text-muted" style="font-size:0.8rem;">
+        <i class="bi bi-info-circle"></i>
+        Los ítems marcados como <strong class="text-success">GRATIS</strong> se incluyen en la boleta/factura con precio $0.
+        Puedes editar el precio de cualquier ítem antes de guardar.
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTA DE DESPACHO -->
+  <div id="alertaDespacho" class="mb-3" style="display:none;"></div>
+
+  <!-- RESUMEN -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header fw-semibold">Resumen</div>
+    <div class="card-body">
+      <div class="row justify-content-end">
+        <div class="col-md-5">
+          <table class="table table-sm mb-0">
+            <tr id="filaDespNeto" style="display:none;">
+              <td>Despacho neto:</td>
+              <td class="text-end fw-semibold" id="resumenDespNeto">$0</td>
+            </tr>
+            <tr>
+              <td>Total neto:</td>
+              <td class="text-end fw-semibold" id="resumenNetoTotal">$0</td>
+            </tr>
+            <tr>
+              <td>IVA (19%):</td>
+              <td class="text-end fw-semibold" id="resumenIva">$0</td>
+            </tr>
+            <tr class="table-danger">
+              <td class="fw-bold">TOTAL A PAGAR:</td>
+              <td class="text-end fw-bold" id="resumenTotal">$0</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end mb-5">
+    <a href="{% url 'inicio' %}" class="btn btn-outline-secondary">Cancelar</a>
+    <button type="submit" class="btn btn-primary px-5" id="btnGuardarVenta">
+      <i class="bi bi-receipt"></i> Guardar y ver Cotización
+    </button>
+  </div>
+
+</form>
+
+<!-- Template para fila de producto/servicio -->
+<template id="rowTemplate">
+  <tr class="producto-row">
+    <td>
+      <select name="producto_id[]" class="form-control form-control-sm producto-select" required>
+        <option value="">-- Selecciona --</option>
+        {% regroup productos by id_categoria as productos_por_cat %}
+        {% for grupo in productos_por_cat %}
+          {% if grupo.grouper %}
+          <optgroup label="{{ grupo.grouper.nombre }}">
+            {% for p in grupo.list %}
+            <option value="{{ p.id_producto }}"
+                    data-precio="{{ p.precio }}"
+                    data-gratis="{% if p.precio == 0 %}1{% else %}0{% endif %}">
+              {{ p.nombre }}{% if p.precio == 0 %} ★ GRATIS{% endif %}
+            </option>
+            {% endfor %}
+          </optgroup>
+          {% else %}
+          <optgroup label="Sin categoría">
+            {% for p in grupo.list %}
+            <option value="{{ p.id_producto }}" data-precio="{{ p.precio }}"
+                    data-gratis="{% if p.precio == 0 %}1{% else %}0{% endif %}">
+              {{ p.nombre }}
+            </option>
+            {% endfor %}
+          </optgroup>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text">$</span>
+        <input type="number" name="precio_unitario[]" class="form-control precio-input"
+               value="0" min="0" style="width:90px;">
+      </div>
+      <small class="gratis-badge text-success fw-bold d-none">GRATIS</small>
+    </td>
+    <td>
+      <input type="number" name="cantidad[]" class="form-control form-control-sm cantidad-input"
+             value="1" min="1" style="width:75px;">
+    </td>
+    <td>
+      <span class="subtotal fw-semibold text-muted">$0</span>
+      <input type="hidden" class="subtotal-hidden" value="0">
+    </td>
+    <td>
+      <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila" title="Eliminar">✕</button>
+    </td>
+  </tr>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const tablaBody = document.getElementById('productosBody');
+  const btnAgregar = document.getElementById('btnAgregarProducto');
+
+  // Toggle cliente
+  function toggleCliente() {
+    const mode = document.querySelector('input[name="cliente_mode"]:checked').value;
+    document.getElementById('seccionNuevo').style.display = mode === 'new' ? 'block' : 'none';
+    document.getElementById('seccionExistente').style.display = mode === 'existing' ? 'block' : 'none';
+  }
+  document.querySelectorAll('input[name="cliente_mode"]').forEach(r => r.addEventListener('change', toggleCliente));
+
+  btnAgregar.addEventListener('click', agregarFila);
+
+  function agregarFila() {
+    const fila = document.getElementById('rowTemplate').content.cloneNode(true);
+    tablaBody.appendChild(fila);
+    recalcularTotal();
+  }
+
+  // Eliminar fila
+  tablaBody.addEventListener('click', function (e) {
+    if (e.target.classList.contains('btn-eliminar-fila')) {
+      if (tablaBody.querySelectorAll('tr').length > 1) {
+        e.target.closest('tr').remove();
+        recalcularTotal();
+      }
+    }
+  });
+
+  // Cambio de producto → auto-rellena precio (editable)
+  tablaBody.addEventListener('change', function (e) {
+    const row = e.target.closest('tr');
+    if (!row) return;
+
+    if (e.target.classList.contains('producto-select')) {
+      const opt = e.target.selectedOptions[0];
+      const precio = opt ? parseInt(opt.dataset.precio || 0) : 0;
+      const esGratis = opt && opt.dataset.gratis === '1';
+      const precioInput = row.querySelector('.precio-input');
+      const gratisBadge = row.querySelector('.gratis-badge');
+
+      precioInput.value = precio;
+
+      if (esGratis) {
+        gratisBadge.classList.remove('d-none');
+      } else {
+        gratisBadge.classList.add('d-none');
+      }
+      calcularSubtotalFila(row);
+    }
+
+    if (e.target.classList.contains('precio-input') || e.target.classList.contains('cantidad-input')) {
+      // Si el usuario edita el precio manualmente, ocultar badge GRATIS si ya no es 0
+      if (e.target.classList.contains('precio-input')) {
+        const gratisBadge = row.querySelector('.gratis-badge');
+        gratisBadge.classList.toggle('d-none', parseInt(e.target.value || 0) !== 0);
+      }
+      calcularSubtotalFila(row);
+    }
+  });
+
+  tablaBody.addEventListener('input', function (e) {
+    const row = e.target.closest('tr');
+    if (!row) return;
+    if (e.target.classList.contains('precio-input') || e.target.classList.contains('cantidad-input')) {
+      if (e.target.classList.contains('precio-input')) {
+        const gratisBadge = row.querySelector('.gratis-badge');
+        gratisBadge.classList.toggle('d-none', parseInt(e.target.value || 0) !== 0);
+      }
+      calcularSubtotalFila(row);
+    }
+  });
+
+  function calcularSubtotalFila(row) {
+    const precio = Math.max(0, parseInt(row.querySelector('.precio-input').value || 0));
+    const cantidad = Math.max(1, parseInt(row.querySelector('.cantidad-input').value || 1));
+    const subtotal = precio * cantidad;
+    const subtotalSpan = row.querySelector('.subtotal');
+    subtotalSpan.textContent = subtotal === 0 ? 'GRATIS' : formatCLP(subtotal);
+    subtotalSpan.className = 'subtotal fw-semibold ' + (subtotal === 0 ? 'text-success' : '');
+    row.querySelector('.subtotal-hidden').value = subtotal;
+    recalcularTotal();
+  }
+
+  function recalcularTotal() {
+    let neto = 0;
+    tablaBody.querySelectorAll('.subtotal-hidden').forEach(el => { neto += parseInt(el.value || 0); });
+
+    // Calcular despacho
+    const despacho = calcularDespacho(neto);
+    const netoConDesp = neto + despacho.monto;
+    const iva = Math.round(netoConDesp * 0.19);
+    const total = netoConDesp + iva;
+
+    document.getElementById('resumenNetoTotal').textContent = formatCLP(netoConDesp);
+    document.getElementById('resumenIva').textContent = formatCLP(iva);
+    document.getElementById('resumenTotal').textContent = formatCLP(total);
+
+    // Mostrar/ocultar fila despacho
+    const filaDespNeto = document.getElementById('filaDespNeto');
+    if (despacho.monto > 0) {
+      filaDespNeto.style.display = '';
+      document.getElementById('resumenDespNeto').textContent = formatCLP(despacho.monto);
+    } else {
+      filaDespNeto.style.display = 'none';
+    }
+
+    // Alerta de despacho
+    mostrarAlertaDespacho(neto, despacho);
+  }
+
+  function calcularDespacho(neto) {
+    if (neto <= 0)    return { tipo: 'vacio',       monto: 0 };
+    if (neto >= 300000) return { tipo: 'gratis',    monto: 0 };
+    if (neto >= 50000)  return { tipo: 'cobro',     monto: 6800 };
+    return                     { tipo: 'sin_despacho', monto: 0 };
+  }
+
+  function mostrarAlertaDespacho(neto, despacho) {
+    const div = document.getElementById('alertaDespacho');
+    if (neto <= 0) { div.style.display = 'none'; return; }
+
+    let html = '';
+    if (despacho.tipo === 'gratis') {
+      html = `<div class="alert alert-success py-2 mb-0">
+        🚚 <strong>¡Despacho GRATIS!</strong> La compra supera $300.000 neto — despacho en Santiago sin costo.
+      </div>`;
+    } else if (despacho.tipo === 'cobro') {
+      const falta = 300000 - neto;
+      html = `<div class="alert alert-warning py-2 mb-0">
+        🚚 <strong>Despacho: $6.800 + IVA</strong> se agregará al total.
+        Agrega <strong>${formatCLP(falta)}</strong> más en productos para despacho gratuito.
+      </div>`;
+    } else {
+      html = `<div class="alert alert-danger py-2 mb-0">
+        ⚠️ <strong>Sin despacho.</strong> El mínimo para despacho es $50.000 neto. Se puede coordinar retiro en Santa Gemita 909 L.202B, Maipú.
+      </div>`;
+    }
+    div.innerHTML = html;
+    div.style.display = '';
+  }
+
+  function formatCLP(n) {
+    return '$' + Math.abs(parseInt(n || 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  // Validación y confirmación antes de guardar
+  document.getElementById('formNuevaVenta').addEventListener('submit', function (e) {
+    const selects = tablaBody.querySelectorAll('.producto-select');
+    let valido = false;
+    selects.forEach(s => { if (s.value) valido = true; });
+    if (!valido) {
+      e.preventDefault();
+      alert('Debe agregar al menos un producto o servicio.');
+      return;
+    }
+    const confirmar = confirm(
+      '¿Está seguro de guardar esta venta?\n\n' +
+      'Al confirmar:\n' +
+      '• La venta quedará registrada en el sistema.\n' +
+      '• Los datos del cliente serán guardados en la base de datos.\n' +
+      '• Se generará la cotización/boleta correspondiente.\n\n' +
+      '¿Desea continuar?'
+    );
+    if (!confirmar) {
+      e.preventDefault();
+    }
+  });
+
+  // Primera fila al cargar
+  agregarFila();
+});
+</script>
+{% endblock %}

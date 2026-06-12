@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block contenido %}
+
+{% comment %} Colores y labels de estado {% endcomment %}
+{% with ec=estado_compra %}
+
+<div class="d-flex align-items-start gap-3 mb-3 flex-wrap">
+    <a href="{% url 'listar_conversaciones' %}" class="btn btn-outline-secondary btn-sm mt-1">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+    <div class="flex-grow-1">
+        <h2 class="fw-bold mb-1" style="font-size:1.15rem;">
+            <i class="bi bi-whatsapp text-success me-2"></i>
+            {{ telefono|cut:"whatsapp:"|cut:"+" }}
+        </h2>
+        <small class="text-muted">{{ mensajes.count }} mensaje{{ mensajes.count|pluralize }}</small>
+    </div>
+
+    <!-- Badge de estado -->
+    <div class="mt-1">
+        {% if ec == 'concretada' %}
+            <span class="badge fs-6 px-3 py-2" style="background:#16a34a;">
+                <i class="bi bi-check-circle-fill me-1"></i>Compra concretada
+            </span>
+        {% elif ec == 'cotizacion_enviada' %}
+            <span class="badge fs-6 px-3 py-2" style="background:#2563eb;">
+                <i class="bi bi-envelope-check-fill me-1"></i>Cotización enviada
+            </span>
+        {% elif ec == 'interesado' %}
+            <span class="badge fs-6 px-3 py-2" style="background:#d97706;">
+                <i class="bi bi-cart-check-fill me-1"></i>Interesado
+            </span>
+        {% elif ec == 'abandonada' %}
+            <span class="badge fs-6 px-3 py-2" style="background:#6b7280;">
+                <i class="bi bi-cart-x-fill me-1"></i>Abandonó el carrito
+            </span>
+        {% else %}
+            <span class="badge fs-6 px-3 py-2 bg-secondary">
+                <i class="bi bi-chat-dots me-1"></i>En consulta
+            </span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Hilo de chat -->
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm p-3" style="border-radius:14px;background:#f0ebe3;">
+            <div style="display:flex;flex-direction:column;gap:10px;
+                        max-height:60vh;overflow-y:auto;padding:4px 8px;" id="chat-thread">
+
+                {% for m in mensajes %}
+                <div style="display:flex;flex-direction:column;
+                            align-items:{% if m.rol == 'user' %}flex-start{% else %}flex-end{% endif %};">
+                    <div style="max-width:75%;padding:8px 12px;
+                                border-radius:{% if m.rol == 'user' %}0 12px 12px 12px{% else %}12px 0 12px 12px{% endif %};
+                                background:{% if m.rol == 'user' %}#fff{% else %}#d9fdd3{% endif %};
+                                box-shadow:0 1px 3px rgba(0,0,0,0.1);
+                                font-size:0.85rem;line-height:1.5;color:#111;word-break:break-word;">
+                        <div style="font-size:0.68rem;font-weight:700;margin-bottom:3px;
+                                    color:{% if m.rol == 'user' %}#CC0000{% else %}#006600{% endif %};">
+                            {% if m.rol == 'user' %}
+                                <i class="bi bi-person-fill me-1"></i>Cliente
+                            {% else %}
+                                <i class="bi bi-robot me-1"></i>REXI
+                            {% endif %}
+                        </div>
+                        {{ m.contenido|linebreaksbr }}
+                        <div style="font-size:0.64rem;color:#999;text-align:right;margin-top:3px;">
+                            {{ m.fecha|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center">Sin mensajes.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de estado -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm p-3" style="border-radius:14px;">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-sliders me-2 text-danger"></i>Actualizar estado
+            </h6>
+            <form method="post" action="{% url 'actualizar_estado_conversacion' %}">
+                {% csrf_token %}
+                <input type="hidden" name="telefono" value="{{ telefono }}">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:0.85rem;">Estado de compra</label>
+                    <select name="estado" class="form-select form-select-sm">
+                        {% for val, label in opciones_estado %}
+                        <option value="{{ val }}" {% if val == estado_compra %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:0.85rem;">Notas internas</label>
+                    <textarea name="notas" class="form-control form-control-sm" rows="3"
+                              placeholder="Ej: Cliente llamó para confirmar, pagó por transferencia...">{{ notas }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-save me-1"></i>Guardar estado
+                </button>
+            </form>
+
+            <!-- Botón recordatorio si carrito abandonado -->
+            {% if estado_compra == 'abandonada' %}
+            <form method="post" action="{% url 'enviar_recordatorio_whatsapp' %}" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="telefono" value="{{ telefono }}">
+                <button type="submit" class="btn btn-success btn-sm w-100"
+                        onclick="return confirm('¿Enviar recordatorio de carrito abandonado por WhatsApp?')">
+                    <i class="bi bi-whatsapp me-1"></i>Enviar recordatorio de carrito
+                </button>
+            </form>
+            <div class="mt-2 p-2 rounded" style="background:#f0fff4;border:1px solid #a7f3d0;font-size:0.75rem;color:#065f46;">
+                Enviará un mensaje personalizado invitando al cliente a retomar su compra.
+            </div>
+            {% endif %}
+
+            <!-- Resumen rápido -->
+            <hr class="my-3">
+            <div style="font-size:0.8rem;color:#555;">
+                <div class="mb-1"><strong>Total mensajes:</strong> {{ mensajes.count }}</div>
+                {% with ultimo=mensajes.last %}
+                {% if ultimo %}
+                <div class="mb-1"><strong>Último contacto:</strong> {{ ultimo.fecha|date:"d/m/Y H:i" }}</div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endwith %}
+
+<script>
+    const thread = document.getElementById('chat-thread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+</script>
+
+{% endblock %}

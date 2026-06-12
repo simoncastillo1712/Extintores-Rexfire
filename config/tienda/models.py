@@ -115,6 +115,7 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     precio = models.IntegerField()
     stock = models.IntegerField()
+    descripcion = models.TextField(null=True, blank=True)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     id_categoria = models.ForeignKey(Categoria, models.SET_NULL, db_column='id_categoria', null=True, blank=True)
 
@@ -165,14 +166,90 @@ class TablaVistaFactura(models.Model):
 
 
 class Venta(models.Model):
-    id_venta = models.AutoField(primary_key=True)
-    fecha = models.DateTimeField()
-    total = models.IntegerField()
+    ORIGENES = [('web', 'Web'), ('chatbot', 'Chatbot'), ('directo', 'Venta directa')]
+    id_venta       = models.AutoField(primary_key=True)
+    fecha          = models.DateTimeField()
+    total          = models.IntegerField()
     tipo_documento = models.CharField(max_length=7)
+    origen         = models.CharField(max_length=10, default='web', null=True, blank=True)
 
     class Meta:
         managed = False
         db_table = 'venta'
-    
+
     def __str__(self):
-        return self.fecha
+        return str(self.fecha)
+
+
+class ConversacionWhatsapp(models.Model):
+    telefono  = models.CharField(max_length=30)
+    rol       = models.CharField(max_length=10)   # 'user' | 'assistant'
+    contenido = models.TextField()
+    fecha     = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'conversacion_whatsapp'
+        ordering = ['fecha']
+
+    def __str__(self):
+        return f'{self.telefono} [{self.rol}] {self.fecha:%d/%m %H:%M}'
+
+
+class ConversacionEstado(models.Model):
+    ESTADOS = [
+        ('en_consulta',        'En consulta'),
+        ('interesado',         'Interesado'),
+        ('cotizacion_enviada', 'Cotización enviada'),
+        ('concretada',         'Compra concretada'),
+        ('abandonada',         'Abandonó el carrito'),
+    ]
+    telefono   = models.CharField(max_length=30, unique=True)
+    estado     = models.CharField(max_length=25, choices=ESTADOS, default='en_consulta')
+    notas      = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'conversacion_estado'
+
+    def __str__(self):
+        return f'{self.telefono} → {self.estado}'
+
+
+class Vendedor(models.Model):
+    id_vendedor = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+    rut = models.CharField(max_length=15, unique=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    email = models.CharField(max_length=100, blank=True, null=True)
+    activo = models.BooleanField(default=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'vendedor'
+
+    def __str__(self):
+        return self.nombre
+
+
+class VentaVendedor(models.Model):
+    id_venta = models.OneToOneField(
+        Venta, models.CASCADE,
+        db_column='id_venta',
+        related_name='info_vendedor',
+    )
+    id_vendedor = models.ForeignKey(
+        Vendedor, models.SET_NULL,
+        null=True, blank=True,
+        db_column='id_vendedor',
+        related_name='ventas',
+    )
+    id_cliente = models.IntegerField(null=True, blank=True)
+    nombre_cliente = models.CharField(max_length=200, null=True, blank=True)
+    neto = models.IntegerField(default=0)
+    comision = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'venta_vendedor'
+
+    def __str__(self):
+        return f'Venta {self.id_venta_id}'

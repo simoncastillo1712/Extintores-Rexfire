@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static rexfire_filters %}
+{% block contenido %}
+
+<!-- Botones de acción (no se imprimen) -->
+<div class="d-flex gap-2 mb-4 no-print">
+  <button onclick="window.print()" class="btn btn-primary">
+    <i class="bi bi-printer-fill"></i> Imprimir / Descargar PDF
+  </button>
+  {% if user.is_authenticated %}
+  <a href="{% url 'nueva_venta' %}" class="btn btn-outline-secondary">+ Nueva Venta</a>
+  {% else %}
+  <a href="{% url 'listar_productos' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-cart-plus"></i> Nueva Compra
+  </a>
+  {% endif %}
+  <a href="{% url 'inicio' %}" class="btn btn-outline-secondary">← Inicio</a>
+</div>
+
+<!-- Documento imprimible -->
+<div class="cotizacion-doc" id="cotizacionDoc">
+
+  <!-- Encabezado -->
+  <div class="cot-header">
+    <div class="cot-header__left">
+      <img src="{% static 'img/Logo sin fondo.png' %}" alt="REXFIRE" class="cot-logo">
+      <div class="cot-empresa-info">
+        <p><strong>RUT:</strong> 77.995.139-1</p>
+        <p>Santa Gemita 909 L.202B, Maipú</p>
+        <p>+569 7555 5423 &nbsp;|&nbsp; +569 4344 7066</p>
+        <p>extintoresrexfire@gmail.com</p>
+      </div>
+    </div>
+    <div class="cot-header__right">
+      <div class="cot-doc-badge">
+        <div class="cot-doc-tipo">
+          {% if boleta %}BOLETA{% elif factura %}FACTURA{% else %}COTIZACIÓN{% endif %}
+        </div>
+        <div class="cot-doc-numero">N° {{ numero_documento }}</div>
+        <div class="cot-doc-fecha">{{ venta.fecha|date:"d/m/Y" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="cot-divider">
+
+  <!-- Datos del cliente -->
+  <div class="cot-cliente mb-4">
+    <h6 class="cot-section-title">DATOS DEL CLIENTE</h6>
+    {% if cliente %}
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <p class="mb-1"><strong>Nombre:</strong> {{ cliente.razon_social }}</p>
+        <p class="mb-1"><strong>RUT:</strong> {{ cliente.rut_cliente }}</p>
+      </div>
+      <div class="col-sm-6">
+        {% if cliente.direccion %}<p class="mb-1"><strong>Dirección:</strong> {{ cliente.direccion }}</p>{% endif %}
+        {% if cliente.telefono %}<p class="mb-1"><strong>Teléfono:</strong> {{ cliente.telefono }}</p>{% endif %}
+        {% if cliente.email %}<p class="mb-1"><strong>Email:</strong> {{ cliente.email }}</p>{% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">Sin datos de cliente registrados.</p>
+    {% endif %}
+  </div>
+
+  <!-- Tabla de productos y servicios -->
+  <h6 class="cot-section-title">DETALLE DE PRODUCTOS Y SERVICIOS</h6>
+  <table class="cot-tabla w-100 mb-2">
+    <thead>
+      <tr>
+        <th class="text-start">Producto / Servicio</th>
+        <th class="text-center">Cant.</th>
+        <th class="text-end">Precio Unit. Neto</th>
+        <th class="text-end">Subtotal Neto</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in detalles %}
+      <tr>
+        <td>
+          {{ d.id_producto.nombre }}
+          {% if d.precio_unitario == 0 %}
+          <span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:1px 6px;font-size:0.73rem;font-weight:700;margin-left:4px;">GRATIS</span>
+          {% endif %}
+        </td>
+        <td class="text-center">{{ d.cantidad }}</td>
+        {% if d.precio_unitario == 0 %}
+        <td class="text-end" style="color:#065f46;font-weight:600;">$0</td>
+        <td class="text-end" style="color:#065f46;font-weight:600;">$0</td>
+        {% else %}
+        <td class="text-end">${{ d.precio_unitario|clp }}</td>
+        <td class="text-end">${{ d.subtotal|clp }}</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+
+      <!-- Fila de despacho -->
+      {% if despacho_tipo == 'gratis' %}
+      <tr style="border-top:2px solid #e5e7eb;">
+        <td>
+          Despacho en Santiago
+          <span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:1px 6px;font-size:0.73rem;font-weight:700;margin-left:4px;">GRATIS</span>
+        </td>
+        <td class="text-center">1</td>
+        <td class="text-end" style="color:#065f46;font-weight:600;">$0</td>
+        <td class="text-end" style="color:#065f46;font-weight:600;">$0</td>
+      </tr>
+      {% elif despacho_tipo == 'cobro' %}
+      <tr style="border-top:2px solid #e5e7eb;">
+        <td>Despacho en Santiago</td>
+        <td class="text-center">1</td>
+        <td class="text-end">${{ despacho_neto|clp }}</td>
+        <td class="text-end">${{ despacho_neto|clp }}</td>
+      </tr>
+      {% elif despacho_tipo == 'sin_despacho' %}
+      <tr style="border-top:2px solid #e5e7eb;">
+        <td colspan="4" style="color:#92400e;font-size:0.82rem;padding:6px 10px;">
+          ⚠️ Monto mínimo para despacho: $50.000 neto. <strong>Retiro en sucursal sin costo</strong> — Santa Gemita 909 L.202B, Maipú.
+        </td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <!-- Totales -->
+  <div class="row justify-content-end mb-4">
+    <div class="col-sm-6 col-md-5">
+      <table class="cot-totales w-100">
+        <tr>
+          <td>Subtotal productos neto:</td>
+          <td class="text-end">${{ neto|clp }}</td>
+        </tr>
+        {% if despacho_tipo == 'cobro' %}
+        <tr>
+          <td>Despacho neto:</td>
+          <td class="text-end">${{ despacho_neto|clp }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td>
+            Total neto:
+            {% if despacho_tipo == 'cobro' %}<small class="text-muted">(con despacho)</small>{% endif %}
+          </td>
+          <td class="text-end">${{ total_con_despacho_neto|clp }}</td>
+        </tr>
+        <tr>
+          <td>IVA (19%):</td>
+          <td class="text-end">${{ total_con_despacho_iva|clp }}</td>
+        </tr>
+        <tr class="cot-total-row">
+          <td><strong>TOTAL A PAGAR:</strong></td>
+          <td class="text-end"><strong>${{ total_con_despacho|clp }}</strong></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Condiciones y pago -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="cot-box">
+        <h6 class="cot-section-title">DATOS DE PAGO</h6>
+        <p class="mb-1"><strong>Transferencia / Efectivo</strong> (sin recargo)</p>
+        <p class="mb-1">Tarjeta de crédito / Redcompra: +1.5% adicional</p>
+        <p class="mb-1"><strong>RUT:</strong> 77.995.139-1</p>
+        <p class="mb-1"><strong>Cuenta Vista Mercado Pago</strong> N° 1046537846</p>
+        <p class="mb-0"><strong>Email:</strong> extintoresrexfire@gmail.com</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="cot-box">
+        <h6 class="cot-section-title">DESPACHO EN SANTIAGO</h6>
+        {% if despacho_tipo == 'gratis' %}
+        <p class="mb-1" style="color:#065f46;font-weight:600;">✅ Despacho sin costo (compra sobre $300.000 neto)</p>
+        {% elif despacho_tipo == 'cobro' %}
+        <p class="mb-1" style="color:#92400e;font-weight:600;">🚚 Despacho incluido: ${{ despacho_neto|clp }} + IVA</p>
+        {% else %}
+        <p class="mb-1" style="color:#991b1b;">⚠️ Retiro en sucursal (mínimo $50.000 para despacho)</p>
+        {% endif %}
+        <p class="mb-1">Compras sobre <strong>$300.000</strong>: despacho sin costo.</p>
+        <p class="mb-1">Entre $50.000 y $300.000: despacho <strong>$6.800 + IVA</strong>.</p>
+        <p class="mb-0 text-muted" style="font-size:0.82rem;">Despachos fuera de Santiago previamente coordinados.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cot-footer">
+    <p class="mb-1">✅ Productos certificados según Normativas Chilenas vigentes (CESMEC).</p>
+    <p class="mb-1">⏳ Cotización válida por <strong>30 días</strong> a partir de la fecha de emisión.</p>
+    <p class="mb-0 text-muted" style="font-size:0.8rem;">Una vez retirados los productos no se aceptarán devoluciones. Garantía máxima 1 año.</p>
+  </div>
+
+</div><!-- fin cotizacion-doc -->
+
+<!-- Botones de acción (abajo, no se imprimen) -->
+<div class="d-flex gap-2 mt-4 no-print">
+  <button onclick="window.print()" class="btn btn-primary">
+    <i class="bi bi-printer-fill"></i> Imprimir / Descargar PDF
+  </button>
+  {% if user.is_authenticated %}
+  <a href="{% url 'nueva_venta' %}" class="btn btn-outline-secondary">+ Nueva Venta</a>
+  {% else %}
+  <a href="{% url 'listar_productos' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-cart-plus"></i> Nueva Compra
+  </a>
+  {% endif %}
+  <a href="{% url 'inicio' %}" class="btn btn-outline-secondary">← Inicio</a>
+</div>
+
+{% endblock %}

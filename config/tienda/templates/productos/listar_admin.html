@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static rexfire_filters %}
 {% block contenido %}
-<h1>Supermercado La Soa Juana</h1>
 <h2>Productos</h2>
 
 <div class="mb-3">
@@ -37,7 +36,7 @@
         {% for producto in productos %}
         <tr>
             <td>{{ producto.nombre }}</td>
-            <td>$ {{ producto.precio|floatformat:0 }}</td>
+            <td>$ {{ producto.precio|clp }}</td>
             <td>{{ producto.id_categoria.nombre }}</td>
             <td>{{ producto.stock }} UNI</td>
             <td>

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load rexfire_filters %}
+{% block contenido %}
+
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <h2 class="fw-bold mb-0">
+        <i class="bi bi-robot text-danger me-2"></i>Ventas realizadas por REXI
+    </h2>
+    <span class="badge bg-secondary fs-6">{{ ventas|length }} venta{{ ventas|length|pluralize }}</span>
+</div>
+
+<!-- Resumen global -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card border-0 shadow-sm text-center py-3" style="border-radius:14px;background:#fff8f8;">
+            <div style="font-size:1.5rem;font-weight:800;color:#CC0000;">${{ total_general|clp }}</div>
+            <div class="text-muted" style="font-size:0.82rem;">Total facturado (con IVA)</div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card border-0 shadow-sm text-center py-3" style="border-radius:14px;background:#f8fff8;">
+            <div style="font-size:1.5rem;font-weight:800;color:#16a34a;">${{ total_neto|clp }}</div>
+            <div class="text-muted" style="font-size:0.82rem;">Subtotal neto</div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card border-0 shadow-sm text-center py-3 px-2" style="border-radius:14px;background:#f0fff4;border:1px solid #bbf7d0;">
+            <div style="font-size:1.5rem;font-weight:800;color:#16a34a;">${{ ahorro_comisiones|clp }}</div>
+            <div class="fw-semibold" style="font-size:0.85rem;color:#15803d;">Ahorro en comisiones</div>
+            <div class="text-muted mt-1" style="font-size:0.75rem;">
+                Equivale al 20% del neto vendido.<br>
+                Un vendedor humano habría cobrado ese valor.
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if ventas %}
+<div class="card shadow-sm p-0" style="border-radius:14px;overflow:hidden;">
+    <table class="table table-hover align-middle mb-0">
+        <thead style="background:#CC0000;color:#fff;">
+            <tr>
+                <th class="ps-3 py-3"># Boleta</th>
+                <th>Fecha</th>
+                <th>Productos</th>
+                <th class="text-end">Neto</th>
+                <th class="text-end">IVA</th>
+                <th class="text-end">Total</th>
+                <th class="text-center">Comisión</th>
+                <th class="text-center">Origen</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for v in ventas %}
+            {% with neto=v.total|divisibleby:119 %}
+            <tr>
+                <td class="ps-3 fw-semibold">
+                    {% with b=v.boleta_set.first %}
+                        {% if b %}#{{ b.numero_boleta }}{% else %}—{% endif %}
+                    {% endwith %}
+                </td>
+                <td style="font-size:0.85rem;">{{ v.fecha|date:"d/m/Y H:i" }}</td>
+                <td style="max-width:220px;">
+                    <ul class="mb-0 ps-3" style="font-size:0.8rem;">
+                    {% for det in v.detalleventa_set.all %}
+                        <li>{{ det.cantidad }}× {{ det.id_producto.nombre }}</li>
+                    {% empty %}
+                        <li class="text-muted">Sin detalle</li>
+                    {% endfor %}
+                    </ul>
+                </td>
+                <td class="text-end" style="font-size:0.88rem;">
+                    ${% widthratio v.total 119 100 %}
+                </td>
+                <td class="text-end" style="font-size:0.88rem;">
+                    ${% widthratio v.total 119 19 %}
+                </td>
+                <td class="text-end fw-bold" style="color:#CC0000;">${{ v.total|clp }}</td>
+                <td class="text-center" style="font-size:0.82rem;">
+                    <span class="text-success fw-bold">
+                        ${% widthratio v.total 595 100 %}
+                    </span>
+                    <div class="text-muted" style="font-size:0.72rem;">ahorrado (20%)</div>
+                </td>
+                <td class="text-center">
+                    <span class="badge" style="background:#7c3aed;">
+                        <i class="bi bi-robot me-1"></i>Chatbot
+                    </span>
+                </td>
+                <td class="pe-3">
+                    <a href="{% url 'ver_cotizacion' v.id_venta %}"
+                       class="btn btn-sm btn-outline-danger" target="_blank">
+                        <i class="bi bi-file-text"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endwith %}
+        {% endfor %}
+        </tbody>
+        <tfoot style="background:#f9fafb;border-top:2px solid #e5e7eb;">
+            <tr>
+                <td colspan="3" class="ps-3 fw-bold py-2">TOTALES</td>
+                <td class="text-end fw-bold">${{ total_neto|clp }}</td>
+                <td class="text-end fw-bold">${{ total_iva|clp }}</td>
+                <td class="text-end fw-bold" style="color:#CC0000;">${{ total_general|clp }}</td>
+                <td class="text-center fw-bold text-success">${{ ahorro_comisiones|clp }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+{% else %}
+<div class="alert alert-info d-flex align-items-center gap-2 mt-2">
+    <i class="bi bi-robot fs-4"></i>
+    <div>Aún no hay ventas registradas desde el chatbot. Cuando un cliente complete una compra desde el chat, aparecerá aquí.</div>
+</div>
+{% endif %}
+
+{% endblock %}

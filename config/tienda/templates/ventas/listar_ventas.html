@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load rexfire_filters %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Ventas realizadas</h2>
+  <a href="{% url 'nueva_venta' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg"></i> Nueva Venta
+  </a>
+</div>
+
+{% if rows %}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>Documento</th>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th>Vendedor</th>
+          <th class="text-end">Neto (s/IVA)</th>
+          <th class="text-end">Total (c/IVA)</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>
+            <span class="badge {% if row.tipo == 'Boleta' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+              {{ row.tipo }}
+            </span>
+            N° {{ row.numero }}
+          </td>
+          <td>{{ row.venta.fecha|date:"d/m/Y H:i" }}</td>
+          <td>
+            {% if row.cliente %}
+              {{ row.cliente.razon_social }}
+            {% elif row.nombre_cliente %}
+              {{ row.nombre_cliente }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if row.info and row.info.id_vendedor %}
+              {{ row.info.id_vendedor.nombre }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="text-end">${{ row.neto|clp }}</td>
+          <td class="text-end fw-semibold">${{ row.venta.total|clp }}</td>
+          <td class="text-center">
+            <a href="{% url 'detalle_venta' row.venta.id_venta %}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye"></i> Ver
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">No hay ventas registradas aún.</div>
+{% endif %}
+
+{% endblock %}

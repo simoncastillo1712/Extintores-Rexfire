@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">
+    {% if vendedor %}Editar Vendedor{% else %}Nuevo Vendedor{% endif %}
+  </h2>
+  <a href="{% url 'listar_vendedores' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+</div>
+
+<div class="card shadow-sm" style="max-width:560px;">
+  <div class="card-body">
+    <form method="POST">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="mb-3">
+        {% if field.field.widget.input_type == 'checkbox' %}
+          <div class="form-check">
+            {{ field }}
+            <label class="form-check-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          </div>
+        {% else %}
+          <label class="form-label fw-semibold">{{ field.label }}</label>
+          {{ field }}
+        {% endif %}
+        {% if field.errors %}<div class="text-danger" style="font-size:0.85rem;">{{ field.errors }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="d-flex gap-2 mt-4">
+        <a href="{% url 'listar_vendedores' %}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

@@ -6,11 +6,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Supermercado Soa Juana</title>
+    <title>Extintores Rexfire</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=13">
 </head>
 
 <body>
@@ -20,7 +20,7 @@
             <nav class="navbar navbar-expand-lg custom-navbar">
                 <div class="container-fluid px-3">
                     <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% url 'inicio' %}">
-                        <i class="bi bi-basket2-fill"></i> Supermercado Soa Juana
+                        <img src="{% static 'img/Logo sin fondo.png' %}" alt="Rexfire Logo" style="height:36px;"> Extintores Rexfire
                     </a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false"
@@ -29,24 +29,127 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                         <div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                            <!-- VISTAS PUBLICAS-->
-                            <a class="nav-link active" aria-current="page" href="{% url 'inicio' %}">Inicio</a>
-                            <a class="nav-link" href="{% url 'listar_productos' %}">Lista de Productos</a>
+
+                            <!-- PÚBLICO -->
+                            <a class="nav-link" href="{% url 'inicio' %}">
+                                <i class="bi bi-house-fill"></i> Inicio
+                            </a>
+                            <a class="nav-link" href="{% url 'listar_productos' %}">
+                                <i class="bi bi-fire"></i> Productos
+                            </a>
+                            <a class="nav-link" href="{% url 'listar_servicios' %}">
+                                <i class="bi bi-wrench-adjustable-circle"></i> Servicios
+                            </a>
+
+                            <!-- SESIÓN DE CLIENTE (dropdown) -->
+                            {% if request.session.cliente_id %}
+                            <div class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle fw-semibold" href="#"
+                                   role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle text-primary"></i>
+                                    {{ request.session.cliente_nombre }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width:200px;">
+                                    <li>
+                                        <h6 class="dropdown-header text-uppercase" style="font-size:0.7rem;letter-spacing:.08em;">
+                                            Mi cuenta
+                                        </h6>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'editar_perfil_cliente' %}">
+                                            <i class="bi bi-pencil-fill me-2 text-secondary"></i>Mis datos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'historial_compras' %}">
+                                            <i class="bi bi-clock-history me-2 text-secondary"></i>Mis compras
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{% url 'cliente_logout' %}" method="post" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            {% endif %}
+
                             {% if user.is_authenticated %}
-                            <!-- VISTAS ADMIN-->
-                            <a class="nav-link" href="{% url 'listar_categorias' %}">Categorias</a>
-                            <a class="nav-link" href="{% url 'listar_productos_admin' %}">Productos</a>
-                            <a class="nav-link" href="{% url 'listar_clientes' %}">Clientes</a>
-                            <a class="nav-link" href="{% url 'listar_proveedores' %}">Proveedores</a>
-                            <form action="{% url 'logout_view' %}" method="post" class="nav-link p-0 m-0">
+                            <!-- PANEL DE CONTROL (dropdown) -->
+                            <div class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-grid-3x3-gap-fill"></i> Panel de control
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width:220px;">
+
+                                    <!-- Sección Inventario -->
+                                    <li><h6 class="dropdown-header text-uppercase" style="font-size:0.7rem;letter-spacing:.08em;">
+                                        <i class="bi bi-box-seam text-primary"></i> Inventario
+                                    </h6></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_productos_admin' %}">
+                                        <i class="bi bi-fire me-2 text-danger"></i>Productos
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_categorias' %}">
+                                        <i class="bi bi-tags me-2 text-secondary"></i>Categorías
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_proveedores' %}">
+                                        <i class="bi bi-truck me-2 text-secondary"></i>Proveedores
+                                    </a></li>
+
+                                    <li><hr class="dropdown-divider"></li>
+
+                                    <!-- Sección Gestión Comercial -->
+                                    <li><h6 class="dropdown-header text-uppercase" style="font-size:0.7rem;letter-spacing:.08em;">
+                                        <i class="bi bi-people text-primary"></i> Gestión Comercial
+                                    </h6></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_clientes' %}">
+                                        <i class="bi bi-person-lines-fill me-2 text-secondary"></i>Clientes
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_vendedores' %}">
+                                        <i class="bi bi-person-badge me-2 text-secondary"></i>Vendedores
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_ventas' %}">
+                                        <i class="bi bi-receipt-cutoff me-2 text-secondary"></i>Ventas
+                                    </a></li>
+
+                                    <li><hr class="dropdown-divider"></li>
+
+                                    <!-- Sección Chatbot -->
+                                    <li><h6 class="dropdown-header text-uppercase" style="font-size:0.7rem;letter-spacing:.08em;">
+                                        <i class="bi bi-whatsapp text-success"></i> Chatbot
+                                    </h6></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_conversaciones' %}">
+                                        <i class="bi bi-chat-dots me-2 text-secondary"></i>Conversaciones
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_ventas_chatbot' %}">
+                                        <i class="bi bi-robot me-2 text-secondary"></i>Ventas por REXI
+                                    </a></li>
+
+                                </ul>
+                            </div>
+
+                            <!-- NUEVA VENTA -->
+                            <a href="{% url 'nueva_venta' %}" class="btn btn-primary btn-sm px-3">
+                                <i class="bi bi-receipt"></i> Nueva Venta
+                            </a>
+
+                            <!-- CERRAR SESIÓN -->
+                            <form action="{% url 'logout_view' %}" method="post" class="p-0 m-0">
                                 {% csrf_token %}
-                                
-                                <button type="submit" class="btn btn-danger btn-sm px-3">Cerrar Sesión</button>
-                               
+                                <button type="submit" class="btn btn-outline-danger btn-sm px-3">
+                                    <i class="bi bi-box-arrow-right"></i> Salir
+                                </button>
                             </form>
 
                             {% else %}
-                            <a class="nav-link" href="{% url 'login_view' %}">Iniciar Sesión</a>
+                            <a class="nav-link" href="{% url 'login_view' %}">
+                                <i class="bi bi-lock"></i> Admin
+                            </a>
                             {% endif %}
 
                         </div>
@@ -60,11 +163,11 @@
     <main class="pb-5">
         <section class="container">
             <div class="hero-image-wrapper mb-4">
-                <img src="{% static 'img/soajuana3.jpg' %}" class="img-fluid w-100 rounded-4 shadow-sm" alt="banner supermercado">
+                <img src="{% static 'img/fondoBanner.jpeg' %}" class="img-fluid w-100 rounded-4 shadow-sm" alt="banner extintores rexfire">
                 <div class="hero-overlay-text">
-                    <span class="badge text-bg-danger mb-2"><h6>Calidad y frescura todos los días</h6></span>
-                    <h2 class="text-white mb-1">Tu supermercado de confianza</h2>
-                    <p class="mb-0">Encuentra productos esenciales con los mejores precios.</p>
+                    <span class="badge text-bg-danger mb-2"><h6>Certificado CESMEC</h6></span>
+                    <h2 class="text-white mb-1">Protege lo que más amas</h2>
+                    <p class="mb-0">Extintores certificados CESMEC con los mejores precios.</p>
                 </div>
             </div>
 
@@ -79,20 +182,83 @@
             </div>
             {% endif %}
 
+            <!-- CARRITO (persiste en todas las páginas cuando hay ítems) -->
+            {% if carrito_total_items_global > 0 %}
+            <div class="d-flex align-items-center justify-content-between gap-2 bg-light border border-success rounded-3 px-3 py-2 mb-3">
+                <span class="text-success fw-semibold" style="font-size:0.92rem;">
+                    <i class="bi bi-cart3"></i>
+                    {{ carrito_total_items_global }} producto{% if carrito_total_items_global != 1 %}s{% endif %} en tu carrito
+                </span>
+                <a href="{% url 'ver_carrito' %}" class="btn btn-success btn-sm">
+                    <i class="bi bi-arrow-right-circle"></i> Ver carrito
+                </a>
+            </div>
+            {% endif %}
+
             {% block contenido%}
             {% endblock %}
         </section>
     </main>
     <footer class="site-footer mt-auto">
         <div class="container py-3 d-flex flex-column flex-md-row justify-content-between align-items-center">
-            <p class="mb-2 mb-md-0">© Supermercado Soa Juana</p>
-            <small>Gracias por su preferencia</small>
+            <p class="mb-1 mb-md-0"><strong>Extintores Rexfire</strong></p>
+            <small>Santa Gemita 909 L.202B, Maipú &nbsp;|&nbsp; +569 7555 5423 &nbsp;|&nbsp; extintoresrexfire@gmail.com</small>
         </div>
     </footer>
+    <!-- ===== CHAT REXI FLOTANTE ===== -->
+    <div id="wa-widget">
+        <div class="wa-card" id="wa-card">
+
+            <!-- Header -->
+            <div class="wa-card-header">
+                <div class="wa-avatar">🔥</div>
+                <div class="wa-card-header-info">
+                    <div class="wa-card-header-name">REXI &mdash; Extintores REXFIRE</div>
+                    <div class="wa-card-header-status">
+                        <span class="wa-online-dot"></span> En línea ahora
+                    </div>
+                </div>
+                <button class="wa-card-close" id="wa-close" aria-label="Cerrar">&times;</button>
+            </div>
+
+            <!-- Mensajes -->
+            <div class="wa-messages" id="wa-messages">
+                <div class="wa-msg wa-msg--bot">
+                    <div class="wa-msg-bubble">
+                        ¡Hola! 👋 Soy <strong>REXI</strong>, el asistente de ventas de Extintores REXFIRE.<br>
+                        Cuéntame qué necesitas y te recomiendo el extintor ideal 🔥
+                    </div>
+                    <div class="wa-msg-time">ahora</div>
+                </div>
+            </div>
+
+            <!-- Indicador "escribiendo..." -->
+            <div class="wa-typing-row" id="wa-typing" style="display:none;">
+                <div class="wa-typing-dots"><span></span><span></span><span></span></div>
+            </div>
+
+            <!-- Input -->
+            <div class="wa-input-area">
+                <input type="text" id="wa-input" placeholder="Escribe tu consulta..." autocomplete="off" maxlength="400">
+                <button id="wa-send" aria-label="Enviar">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Botón flotante -->
+        <button id="wa-fab" class="pulse" aria-label="Chat con REXI" title="Chatear con REXI">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span class="wa-fab-badge" id="wa-badge">1</span>
+        </button>
+    </div>
+    <!-- ===== FIN CHAT REXI ===== -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous">
         </script>
-    <script src="{% static 'js/script.js' %}?v=2"></script>
+    <script src="{% static 'js/script.js' %}?v=12"></script>
 </body>
 
 </html>

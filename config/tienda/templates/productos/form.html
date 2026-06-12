@@ -2,34 +2,63 @@
 {% load static %}
 {% block contenido %}
 
-<h2 class="mb-4">
-    {% if form.instance.id_producto %}
-    Editar Producto
-    {% else %}
-    Nuevo Producto
-    {% endif %}
-</h2>
-<form method="post">
-    {% csrf_token %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">
+    {% if form.instance.id_producto %}Editar Producto{% else %}Nuevo Producto{% endif %}
+  </h2>
+  <a href="{% url 'listar_productos_admin' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+</div>
 
-    {% for field in form %}
-    <div class="mb-3">
-        <label class="form-label">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}
-        <div class="text-danger">
-            {{ field.errors }}
+<div class="card shadow-sm" style="max-width:680px;">
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% for field in form %}
+        {% if field.name == 'imagen' %}
+        <!-- Campo imagen con preview -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">{{ field.label }}</label>
+
+          {% if producto and producto.imagen %}
+          <div class="mb-2 d-flex align-items-center gap-3">
+            <img src="{{ producto.imagen.url }}" alt="Imagen actual"
+                 style="height:90px;width:90px;object-fit:contain;border:1px solid #e5e7eb;border-radius:10px;padding:4px;background:#f9fafb;">
+            <div>
+              <p class="mb-1 text-muted" style="font-size:0.82rem;">Imagen actual</p>
+              <small class="text-muted">{{ producto.imagen.name }}</small>
+            </div>
+          </div>
+          {% endif %}
+
+          {{ field }}
+
+          {% if field.errors %}
+          <div class="text-danger mt-1" style="font-size:0.85rem;">{{ field.errors }}</div>
+          {% endif %}
+          <div class="form-text">Formatos admitidos: JPG, PNG, WEBP. Deja vacío para conservar la imagen actual.</div>
+        </div>
+
+        {% else %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+          <div class="text-danger mt-1" style="font-size:0.85rem;">{{ field.errors }}</div>
+          {% endif %}
         </div>
         {% endif %}
-    </div>
-    {% endfor %}
+      {% endfor %}
 
-    <div class="d-flex justify_content-between">
-        <a href="{% url 'listar_productos_admin' %}" class="btn btn-secondary">Volver</a>
-        <button type="submit" class="btn btn-primary">Guardar</button>
-    </div>
+      <div class="d-flex gap-2 mt-4">
+        <a href="{% url 'listar_productos_admin' %}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-floppy"></i> Guardar
+        </button>
+      </div>
 
-</form>
-
+    </form>
+  </div>
+</div>
 
 {% endblock %}

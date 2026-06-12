@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load rexfire_filters %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-0">Comisiones — {{ vendedor.nombre }}</h2>
+    <small class="text-muted">RUT: {{ vendedor.rut }} &nbsp;|&nbsp; Comisión: 20% del neto por venta</small>
+  </div>
+  <a href="{% url 'listar_vendedores' %}" class="btn btn-outline-secondary btn-sm">← Vendedores</a>
+</div>
+
+<!-- Resumen -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card shadow-sm text-center p-3">
+      <div class="text-muted" style="font-size:0.82rem;">Total ventas</div>
+      <div class="fs-3 fw-bold text-primary">{{ ventas|length }}</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card shadow-sm text-center p-3">
+      <div class="text-muted" style="font-size:0.82rem;">Neto total vendido</div>
+      <div class="fs-4 fw-bold">${{ total_neto|clp }}</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card shadow-sm text-center p-3 border-success">
+      <div class="text-muted" style="font-size:0.82rem;">Comisión total (20%)</div>
+      <div class="fs-4 fw-bold text-success">${{ total_comision|clp }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Detalle por venta -->
+{% if ventas %}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th class="text-end">Neto venta</th>
+          <th class="text-end">Comisión (20%)</th>
+          <th class="text-center">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vv in ventas %}
+        <tr>
+          <td>{{ vv.id_venta.fecha|date:"d/m/Y" }}</td>
+          <td>
+            {% if vv.nombre_cliente %}{{ vv.nombre_cliente }}
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </td>
+          <td class="text-end">${{ vv.neto|clp }}</td>
+          <td class="text-end text-success fw-bold">${{ vv.comision|clp }}</td>
+          <td class="text-center">
+            <a href="{% url 'detalle_venta' vv.id_venta.id_venta %}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="table-light fw-bold">
+        <tr>
+          <td colspan="2">TOTALES</td>
+          <td class="text-end">${{ total_neto|clp }}</td>
+          <td class="text-end text-success">${{ total_comision|clp }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">Este vendedor aún no tiene ventas registradas.</div>
+{% endif %}
+
+{% endblock %}
