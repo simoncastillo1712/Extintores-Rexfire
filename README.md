@@ -109,8 +109,8 @@ Incluye tienda pública con carrito de compras, panel de administración, y **RE
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/simoncastillo1712/supermercado-Soa-Juana.git
-cd supermercado-Soa-Juana
+git clone https://github.com/simoncastillo1712/Extintores-Rexfire.git
+cd Extintores-Rexfire
 ```
 
 ### 2. Crear y activar entorno virtual
