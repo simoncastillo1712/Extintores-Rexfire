@@ -20,19 +20,22 @@ django.log
 cloudflared.log
 
 # Media uploads (archivos subidos por usuarios — no van en git)
-config/media/
+media/
 
-# Archivos de distribución / empaquetado
+# Archivos estáticos compilados (generados por collectstatic)
+staticfiles/
+
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# Distribución / empaquetado
 *.egg-info/
 dist/
 build/
 *.egg
 MANIFEST
-
-# Entorno virtual (venv ya tiene su propio .gitignore interno)
-venv/
-env/
-.venv/
 
 # IDEs
 .vscode/
