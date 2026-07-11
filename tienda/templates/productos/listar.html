@@ -1,72 +1,145 @@
 {% extends 'base.html' %}
 {% load static rexfire_filters %}
-{% block contenido%}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Productos</h2>
-    <a href="{% url 'ver_carrito' %}" class="btn btn-primary position-relative">
-        <i class="bi bi-cart3"></i> Ver carrito
-        <span id="carritoBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if not carrito_total_items %}d-none{% endif %}">
-            {{ carrito_total_items }}
-        </span>
-    </a>
+{% block contenido %}
+<style>
+    .prod-header {
+        background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+        border-radius: 16px;
+        padding: 18px 20px;
+        color: #fff;
+        margin-bottom: 20px;
+    }
+    .prod-header h4 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+
+    .search-box .input-group-text { background: #fff; border-right: none; border-radius: 12px 0 0 12px; }
+    .search-box .form-control      { border-left: none; border-radius: 0 12px 12px 0; }
+    .search-box .btn               { border-radius: 12px; }
+
+    .prod-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        overflow: hidden;
+        margin-bottom: 14px;
+        background: #fff;
+        transition: box-shadow .18s;
+    }
+    .prod-card:active { box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+    .prod-img-wrap {
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 180px;
+    }
+    .prod-img-wrap img {
+        max-height: 160px;
+        max-width: 100%;
+        object-fit: contain;
+        padding: 10px;
+    }
+    .prod-img-placeholder { font-size: 3.5rem; opacity: .25; }
+
+    .prod-body { padding: 14px 16px 16px; }
+    .prod-nombre { font-weight: 700; font-size: 1rem; color: #212529; margin-bottom: 2px; }
+    .prod-precio { font-weight: 700; font-size: 1.1rem; color: #dc3545; }
+    .prod-precio small { font-size: .75rem; color: #6c757d; font-weight: 400; }
+    .prod-desc   { font-size: .78rem; color: #6c757d; margin-top: 4px; line-height: 1.4; }
+
+    .prod-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-comprar-card {
+        flex: 1;
+        background: #198754;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+        font-weight: 700;
+        font-size: .9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .btn-detalle-card {
+        background: #f8f9fa;
+        color: #495057;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: .9rem;
+    }
+    .btn-comprar-card:active, .btn-detalle-card:active { opacity: .8; }
+</style>
+
+<div class="prod-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-fire me-2"></i>Productos</h4>
+        <a href="{% url 'ver_carrito' %}" class="btn btn-light btn-sm fw-semibold position-relative" style="border-radius:10px;">
+            <i class="bi bi-cart3 me-1"></i>Carrito
+            <span id="carritoBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if not carrito_total_items %}d-none{% endif %}">
+                {{ carrito_total_items }}
+            </span>
+        </a>
+    </div>
 </div>
 
-<div class="container">
-    <form method="get" class="mb-3 d-flex">
+<div class="search-box mb-4">
+    <form method="get" class="d-flex gap-2">
         <div class="input-group">
-            <span class="input-group-text" id="search-icon-productos-publico">
-                <i class="bi bi-search"></i>
-            </span>
-            <input type="text" name="q" placeholder="Buscar productos o categoría" value="{{ q }}" class="form-control"
-                aria-describedby="search-icon-productos-publico" />
+            <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="q" placeholder="Buscar productos o categoría" value="{{ q }}" class="form-control">
         </div>
-        <button type="submit" class="btn btn-primary ms-2">Buscar</button>
+        <button type="submit" class="btn btn-danger">Buscar</button>
     </form>
 </div>
 
-<div class="row ">
-
+<div class="row g-0">
     {% for producto in productos %}
-    <div class="col-6 col-md-4">
-        <div class="card border mb-3 producto-card"
+    <div class="col-12 col-md-6 col-lg-4 px-0 px-md-2 mb-0">
+        <div class="prod-card producto-card"
             data-id="{{ producto.id_producto }}"
             data-nombre="{{ producto.nombre }}"
             data-precio="{{ producto.precio }}"
             data-stock="{{ producto.stock }}"
             data-descripcion="{{ producto.descripcion|default:'' }}"
             data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
-            {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
-            {% else %}
-            <div class="card-img-placeholder d-flex align-items-center justify-content-center bg-light">
-                <i class="bi bi-fire text-danger" style="font-size:3rem;"></i>
-            </div>
-            {% endif %}
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title fw-bold mb-1">{{ producto.nombre }}</h5>
-                <p class="card-text text-primary fw-semibold mb-1" style="font-size:1.1rem;">
-                    ${{ producto.precio|clp }} <small class="text-muted fw-normal">+ IVA</small>
-                </p>
-                {% if producto.descripcion %}
-                <p class="card-text text-muted mb-3" style="font-size:0.8rem;">
-                    {{ producto.descripcion|truncatechars:60 }}
-                </p>
+
+            <div class="prod-img-wrap">
+                {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+                {% else %}
+                <i class="bi bi-fire text-danger prod-img-placeholder"></i>
                 {% endif %}
-                <div class="mt-auto d-flex gap-2 align-items-center">
-                    <button type="button" class="btn btn-success btn-sm btn-comprar flex-grow-1">
-                        <i class="bi bi-cart-plus"></i> Comprar
+            </div>
+
+            <div class="prod-body">
+                <div class="prod-nombre">{{ producto.nombre }}</div>
+                <div class="prod-precio">${{ producto.precio|clp }} <small>+ IVA</small></div>
+                {% if producto.descripcion %}
+                <div class="prod-desc">{{ producto.descripcion|truncatechars:70 }}</div>
+                {% endif %}
+                <div class="prod-actions">
+                    <button type="button" class="btn-comprar-card btn-comprar">
+                        <i class="bi bi-cart-plus"></i> Agregar
                     </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-ver-detalle" title="Ver detalle">
+                    <button type="button" class="btn-detalle-card btn-ver-detalle" title="Ver detalle">
                         <i class="bi bi-info-circle"></i>
                     </button>
                 </div>
             </div>
         </div>
     </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">
+        <i class="bi bi-fire" style="font-size:3rem;opacity:.25;"></i>
+        <p class="mt-3">No se encontraron productos{% if q %} para "{{ q }}"{% endif %}.</p>
+    </div>
     {% endfor %}
-
 </div>
 
+<!-- Modal detalle producto (sin cambios funcionales) -->
 <div id="productoModal" class="producto-modal-overlay" aria-hidden="true">
     <div class="producto-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductoNombre">
         <button type="button" class="producto-modal-close" id="cerrarModalBtn" aria-label="Cerrar modal">&times;</button>
@@ -84,8 +157,7 @@
                     <div id="modalProductoEspecificaciones" class="mb-3"></div>
                     <div id="modalProductoRecomendado" class="modal-recomendado mb-3"></div>
                     <label for="cantidadProducto" class="form-label fw-semibold" style="font-size:0.88rem;">Cantidad</label>
-                    <input type="number" id="cantidadProducto" class="form-control form-control-sm mb-3"
-                           value="1" min="1" style="width:100px;">
+                    <input type="number" id="cantidadProducto" class="form-control form-control-sm mb-3" value="1" min="1" style="width:100px;">
                     <div class="d-flex flex-wrap gap-2">
                         <button type="button" id="agregarCarritoBtn" class="btn btn-success btn-sm">
                             <i class="bi bi-cart-plus"></i> Agregar al carrito
@@ -98,6 +170,4 @@
         </div>
     </div>
 </div>
-
-
 {% endblock %}

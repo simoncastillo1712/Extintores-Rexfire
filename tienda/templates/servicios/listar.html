@@ -2,41 +2,48 @@
 {% load static rexfire_filters %}
 {% block contenido %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h2 class="mb-0 fw-bold">Recargas y Servicios</h2>
-        <p class="text-muted mb-0" style="font-size:0.9rem;">
-            Mantenimiento certificado para tus extintores
-        </p>
+<style>
+.serv-header { background:linear-gradient(135deg,#0d6efd 0%,#0a58ca 100%); border-radius:16px; padding:18px 20px; color:#fff; margin-bottom:20px; }
+.serv-header h4 { font-size:1.25rem; font-weight:700; margin:0; }
+.prod-card { border:none; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.08); overflow:hidden; margin-bottom:14px; background:#fff; }
+.prod-img-wrap { background:#f8f9fa; display:flex; align-items:center; justify-content:center; height:160px; }
+.prod-img-wrap img { max-height:140px; max-width:100%; object-fit:contain; padding:10px; }
+.prod-body { padding:14px 16px 16px; }
+.prod-nombre { font-weight:700; font-size:1rem; color:#212529; margin-bottom:2px; }
+.prod-precio-gratis { font-weight:700; font-size:1rem; color:#198754; }
+.prod-precio { font-weight:700; font-size:1rem; color:#0d6efd; }
+.prod-desc { font-size:.78rem; color:#6c757d; margin-top:4px; line-height:1.4; }
+.btn-agregar-card { width:100%; background:#198754; color:#fff; border:none; border-radius:10px; padding:10px; font-weight:700; font-size:.9rem; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:6px; }
+</style>
+
+<div class="serv-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h4><i class="bi bi-wrench-adjustable-circle me-2"></i>Servicios</h4>
+            <p style="margin:4px 0 0;opacity:.8;font-size:.85rem;">Mantenimiento certificado</p>
+        </div>
+        <a href="{% url 'ver_carrito' %}" class="btn btn-light btn-sm fw-semibold position-relative" style="border-radius:10px;">
+            <i class="bi bi-cart3 me-1"></i>Carrito
+            <span id="carritoBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if not carrito_total_items %}d-none{% endif %}">{{ carrito_total_items }}</span>
+        </a>
     </div>
-    <a href="{% url 'ver_carrito' %}" class="btn btn-primary position-relative">
-        <i class="bi bi-cart3"></i> Ver carrito
-        <span id="carritoBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if not carrito_total_items %}d-none{% endif %}">
-            {{ carrito_total_items }}
-        </span>
-    </a>
 </div>
 
-<!-- Buscador -->
 <div class="mb-4">
-    <form method="get" class="d-flex">
+    <form method="get" class="d-flex gap-2">
         <div class="input-group">
-            <span class="input-group-text" id="search-icon-servicios">
-                <i class="bi bi-search"></i>
-            </span>
-            <input type="text" name="q" placeholder="Buscar servicio o accesorio"
-                   value="{{ q }}" class="form-control"
-                   aria-describedby="search-icon-servicios" />
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="q" placeholder="Buscar servicio o accesorio" value="{{ q }}" class="form-control border-start-0 ps-0">
         </div>
-        <button type="submit" class="btn btn-primary ms-2">Buscar</button>
+        <button type="submit" class="btn btn-primary">Buscar</button>
     </form>
 </div>
 
 {% if servicios %}
-<div class="row">
+<div class="row g-0">
     {% for producto in servicios %}
-    <div class="col-6 col-md-4">
-        <div class="card border mb-3 producto-card"
+    <div class="col-12 col-md-6 col-lg-4 px-0 px-md-2">
+        <div class="prod-card producto-card"
             data-id="{{ producto.id_producto }}"
             data-nombre="{{ producto.nombre }}"
             data-precio="{{ producto.precio }}"
@@ -44,42 +51,27 @@
             data-descripcion="{{ producto.descripcion|default:'' }}"
             data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
 
-            {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
-            {% else %}
-            <div class="card-img-placeholder d-flex align-items-center justify-content-center bg-light">
-                <i class="bi bi-wrench-adjustable text-primary" style="font-size:3rem;"></i>
-            </div>
-            {% endif %}
-
-            <div class="card-body d-flex flex-column">
-                <span class="badge mb-2 align-self-start"
-                      style="background:#f0f0f0;color:#444;font-size:0.72rem;">
-                    {{ producto.id_categoria.nombre }}
-                </span>
-                <h5 class="card-title fw-bold mb-1">{{ producto.nombre }}</h5>
-
-                {% if producto.precio == 0 %}
-                <p class="card-text fw-bold mb-1" style="font-size:1.05rem;color:#065f46;">
-                    GRATIS <small class="fw-normal text-muted" style="font-size:0.8rem;">incluido en la compra</small>
-                </p>
+            <div class="prod-img-wrap">
+                {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
                 {% else %}
-                <p class="card-text text-primary fw-semibold mb-1" style="font-size:1.05rem;">
-                    ${{ producto.precio|clp }} <small class="text-muted fw-normal">+ IVA</small>
-                </p>
+                <i class="bi bi-wrench-adjustable text-primary" style="font-size:3rem;opacity:.3;"></i>
                 {% endif %}
-
+            </div>
+            <div class="prod-body">
+                <span class="badge mb-2" style="background:#f0f0f0;color:#444;font-size:.7rem;">{{ producto.id_categoria.nombre }}</span>
+                <div class="prod-nombre">{{ producto.nombre }}</div>
+                {% if producto.precio == 0 %}
+                <div class="prod-precio-gratis">GRATIS <small class="text-muted fw-normal" style="font-size:.75rem;">incluido en la compra</small></div>
+                {% else %}
+                <div class="prod-precio">${{ producto.precio|clp }} <small class="text-muted fw-normal" style="font-size:.75rem;">+ IVA</small></div>
+                {% endif %}
                 {% if producto.descripcion %}
-                <p class="card-text text-muted mb-3" style="font-size:0.8rem;">
-                    {{ producto.descripcion|truncatechars:60 }}
-                </p>
+                <div class="prod-desc">{{ producto.descripcion|truncatechars:70 }}</div>
                 {% endif %}
-
-                <div class="mt-auto d-flex gap-2 align-items-center">
-                    <button type="button" class="btn btn-success btn-sm btn-comprar flex-grow-1">
-                        <i class="bi bi-cart-plus"></i> Agregar
-                    </button>
-                </div>
+                <button type="button" class="btn-agregar-card btn-comprar">
+                    <i class="bi bi-cart-plus"></i> Agregar
+                </button>
             </div>
         </div>
     </div>
