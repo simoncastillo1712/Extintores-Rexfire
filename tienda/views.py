@@ -1510,7 +1510,6 @@ def webhook_whatsapp(request):
 @login_required
 def impresora_etiquetas(request):
     from pathlib import Path
-    from django.templatetags.static import static as _static
 
     docs_dir = Path(settings.BASE_DIR) / 'tienda' / 'static' / 'docs'
     try:
@@ -1518,17 +1517,19 @@ def impresora_etiquetas(request):
     except FileNotFoundError:
         doc_files = set()
 
+    base = settings.STATIC_URL  # e.g. '/static/'
+
     def doc_url(filename):
-        return _static(f'docs/{filename}') if filename in doc_files else None
+        return f'{base}docs/{filename}' if filename in doc_files else None
 
     SPEC_CANDIDATES = {
         '1KG':  ['Especificaciones1KG.pdf',  'Especificaciones 1KG.pdf'],
         '2KG':  ['Especificaciones 2KG.pdf', 'Especificaciones2KG.pdf'],
         '4KG':  ['Especificaciones 4KG.pdf', 'Especificaciones4KG.pdf'],
         '6KG':  ['Especificaciones 6KG.pdf', 'Especificaciones6KG.pdf'],
-        '10KG': ['Especificaciones 10KG.pdf','Especificaciones10KG.pdf'],
-        '25KG': ['Especificaciones 25KG.pdf','Especificaciones25KG.pdf'],
-        '50KG': ['Especificaciones 50KG.pdf','Especificaciones50KG.pdf'],
+        '10KG': ['Especificaciones 10KG.pdf', 'Especificaciones10KG.pdf'],
+        '25KG': ['Especificaciones 25KG.pdf', 'Especificaciones25KG.pdf'],
+        '50KG': ['Especificaciones 50KG.pdf', 'Especificaciones50KG.pdf'],
     }
 
     MODELOS_DEF = [
@@ -1547,20 +1548,18 @@ def impresora_etiquetas(request):
         modelos.append({
             'kg':       m['kg'],
             'nombre':   m['nombre'],
-            'img_url':  _static(m['img']),
+            'img_url':  f"{base}{m['img']}",
             'etiq_url': doc_url(m['etiq']),
-            'spec_url': _static(f"docs/{spec_file}") if spec_file else None,
+            'spec_url': f"{base}docs/{spec_file}" if spec_file else None,
         })
 
     STANDALONE_DEF = [
         {'nombre': 'Etiqueta Frontal Chica', 'doc': 'Etiqueta FRONTALCHICA.pdf',  'color': '#dc3545', 'icono': 'bi-tag-fill'},
-        {'nombre': 'Etiqueta Frontal Grande','doc': 'Etiqueta FRONTALGRANDE.pdf', 'color': '#c0392b', 'icono': 'bi-tag'},
-        {'nombre': 'Fechador Chico',         'doc': 'fechadorCHICO.pdf',           'color': '#0d6efd', 'icono': 'bi-calendar-check-fill'},
-        {'nombre': 'Fechador Grande',        'doc': 'fechadorGRANDE.pdf',          'color': '#0a58ca', 'icono': 'bi-calendar-check'},
+        {'nombre': 'Etiqueta Frontal Grande', 'doc': 'Etiqueta FRONTALGRANDE.pdf', 'color': '#c0392b', 'icono': 'bi-tag'},
+        {'nombre': 'Fechador Chico',          'doc': 'fechadorCHICO.pdf',           'color': '#0d6efd', 'icono': 'bi-calendar-check-fill'},
+        {'nombre': 'Fechador Grande',         'doc': 'fechadorGRANDE.pdf',          'color': '#0a58ca', 'icono': 'bi-calendar-check'},
     ]
-    standalone = []
-    for s in STANDALONE_DEF:
-        standalone.append({**s, 'url': doc_url(s['doc'])})
+    standalone = [{**s, 'url': doc_url(s['doc'])} for s in STANDALONE_DEF]
 
     return render(request, 'etiquetas/lista.html', {
         'modelos':    modelos,
