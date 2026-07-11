@@ -2,38 +2,69 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Imprimir — {{ etiqueta.producto.nombre }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ etiqueta.producto.nombre }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: sans-serif; background: #f0f0f0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a1a; }
 
         .toolbar {
             position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            background: #212529; color: #fff;
+            background: #212529;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 20px; gap: 12px;
+            padding: 10px 16px;
+            gap: 10px;
+            min-height: 56px;
         }
-        .toolbar h6 { margin: 0; font-size: 0.95rem; }
-        .toolbar .btn-group { display: flex; gap: 8px; }
-        .toolbar button, .toolbar a {
-            padding: 6px 16px; border-radius: 6px; font-size: 0.85rem;
-            cursor: pointer; text-decoration: none; border: none;
+        .toolbar-left { display: flex; flex-direction: column; }
+        .toolbar-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: .9rem;
+            line-height: 1.2;
         }
-        .btn-print { background: #dc3545; color: #fff; }
-        .btn-back  { background: #6c757d; color: #fff; }
+        .toolbar-sub {
+            color: #adb5bd;
+            font-size: .75rem;
+        }
+        .toolbar-btns { display: flex; gap: 8px; flex-shrink: 0; }
+
+        .btn-t {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .btn-back   { background: #343a40; color: #dee2e6; }
+        .btn-print  { background: #dc3545; color: #fff; }
 
         .pdf-wrapper {
-            margin-top: 56px;
-            height: calc(100vh - 56px);
+            position: fixed;
+            top: 56px; left: 0; right: 0; bottom: 0;
         }
-        iframe {
-            width: 100%; height: 100%; border: none;
+        iframe { width: 100%; height: 100%; border: none; }
+
+        .no-pdf {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100%; color: #6c757d; gap: 12px;
+        }
+        .no-pdf i { font-size: 3rem; opacity: .4; }
+
+        @media (max-width: 400px) {
+            .btn-t { padding: 8px 12px; font-size: .8rem; }
+            .btn-back-text { display: none; }
         }
 
         @media print {
             .toolbar { display: none !important; }
-            .pdf-wrapper { margin-top: 0; height: 100vh; }
-
+            .pdf-wrapper { top: 0; }
             @page {
                 size: {{ config.ancho_mm }}mm {{ config.alto_mm }}mm {{ config.orientacion }};
                 margin: 0;
@@ -44,32 +75,38 @@
 <body>
 
 <div class="toolbar">
-    <h6><i>🔥</i> {{ etiqueta.producto.nombre }} — {% if tipo == 'delantera' %}Etiqueta Delantera{% else %}Especificaciones{% endif %}</h6>
-    <div class="btn-group">
-        <a href="{% url 'impresora_etiquetas' %}" class="btn-back">← Volver</a>
-        <button class="btn-print" onclick="imprimirPDF()">🖨 Imprimir</button>
+    <div class="toolbar-left">
+        <span class="toolbar-title">🔥 {{ etiqueta.producto.nombre }}</span>
+        <span class="toolbar-sub">{% if tipo == 'delantera' %}Etiqueta Delantera{% else %}Especificaciones{% endif %}</span>
+    </div>
+    <div class="toolbar-btns">
+        <a href="{% url 'impresora_etiquetas' %}" class="btn-t btn-back">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11 2 5 8l6 6"/></svg>
+            <span class="btn-back-text">Volver</span>
+        </a>
+        <button class="btn-t btn-print" onclick="imprimirPDF()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Imprimir
+        </button>
     </div>
 </div>
 
 <div class="pdf-wrapper">
     {% if archivo %}
-    <iframe id="pdf-frame" src="{{ archivo.url }}" title="Etiqueta PDF"></iframe>
+    <iframe id="pdf-frame" src="{{ archivo.url }}#toolbar=0" title="PDF"></iframe>
     {% else %}
-    <div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:1.2rem;color:#888;">
-        No hay PDF cargado para este tipo de etiqueta.
+    <div class="no-pdf">
+        <i>📄</i>
+        <p>No hay PDF cargado para este tipo de etiqueta.</p>
     </div>
     {% endif %}
 </div>
 
 <script>
 function imprimirPDF() {
-    var frame = document.getElementById('pdf-frame');
-    if (frame) {
-        frame.contentWindow.focus();
-        frame.contentWindow.print();
-    } else {
-        window.print();
-    }
+    var f = document.getElementById('pdf-frame');
+    if (f) { try { f.contentWindow.focus(); f.contentWindow.print(); } catch(e) { window.print(); } }
+    else { window.print(); }
 }
 </script>
 </body>

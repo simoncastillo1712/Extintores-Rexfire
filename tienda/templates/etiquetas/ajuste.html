@@ -1,163 +1,315 @@
 {% extends 'base.html' %}
 {% block contenido %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0"><i class="bi bi-gear-fill text-secondary me-2"></i>Ajuste Impresión</h4>
-    <a href="{% url 'impresora_etiquetas' %}" class="btn btn-outline-danger btn-sm">
-        <i class="bi bi-printer me-1"></i>Ir a Imprimir
-    </a>
+<style>
+    .ajuste-header {
+        background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+        border-radius: 16px;
+        padding: 20px 24px;
+        color: white;
+        margin-bottom: 24px;
+    }
+    .ajuste-header h4 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+    .ajuste-header p  { margin: 4px 0 0; opacity: .75; font-size: .88rem; }
+
+    .section-title {
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #6c757d;
+        margin-bottom: 12px;
+    }
+
+    /* Paper config card */
+    .config-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        overflow: hidden;
+    }
+    .config-card .card-header {
+        background: #212529;
+        color: white;
+        font-weight: 700;
+        font-size: .9rem;
+        padding: 14px 20px;
+        border: none;
+    }
+    .config-card .card-body { padding: 20px; }
+
+    /* Producto upload cards */
+    .prod-card {
+        border: 1.5px solid #e9ecef;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        transition: border-color .2s;
+    }
+    .prod-card.has-pdfs { border-color: #c3e6cb; }
+
+    .prod-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        cursor: pointer;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .prod-img {
+        width: 48px; height: 48px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #f8f9fa;
+        flex-shrink: 0;
+    }
+    .prod-img-placeholder {
+        width: 48px; height: 48px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; flex-shrink: 0;
+    }
+    .prod-info { flex: 1; min-width: 0; }
+    .prod-nombre { font-weight: 700; font-size: .92rem; color: #212529; }
+    .prod-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+    .pdf-badge {
+        font-size: .7rem; font-weight: 600; padding: 2px 8px;
+        border-radius: 20px; white-space: nowrap;
+    }
+    .pdf-badge.ok  { background: #d1e7dd; color: #0a3622; }
+    .pdf-badge.no  { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
+    .prod-toggle {
+        color: #adb5bd; font-size: 1.1rem;
+        transition: transform .2s;
+        flex-shrink: 0;
+    }
+    .prod-header[aria-expanded="true"] .prod-toggle {
+        transform: rotate(180deg);
+    }
+
+    .upload-panel {
+        padding: 0 16px 16px;
+        border-top: 1px solid #f0f0f0;
+    }
+    .upload-zone {
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: border-color .2s;
+    }
+    .upload-zone:hover, .upload-zone:focus-within { border-color: #dc3545; background: #fff5f5; }
+    .upload-zone label {
+        cursor: pointer;
+        font-size: .83rem;
+        color: #6c757d;
+        display: block;
+        margin: 0;
+    }
+    .upload-zone .upload-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-zone .file-name {
+        font-size: .78rem; color: #dc3545; font-weight: 600;
+        margin-top: 4px; word-break: break-all;
+    }
+
+    .btn-subir {
+        background: #dc3545; color: #fff;
+        border: none; border-radius: 10px;
+        padding: 10px 20px; font-weight: 700;
+        font-size: .9rem; width: 100%;
+        margin-top: 12px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-subir:active { opacity: .85; }
+
+    .btn-guardar-config {
+        background: #212529; color: #fff;
+        border: none; border-radius: 10px;
+        padding: 12px 20px; font-weight: 700;
+        font-size: .95rem; width: 100%;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-guardar-config:active { opacity: .85; }
+</style>
+
+<div class="ajuste-header">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h4><i class="bi bi-gear-fill me-2"></i>Ajuste Impresión</h4>
+            <p>Configura papel y carga los PDFs</p>
+        </div>
+        <a href="{% url 'impresora_etiquetas' %}" class="btn btn-light btn-sm fw-semibold" style="border-radius:10px;">
+            <i class="bi bi-printer me-1"></i>Imprimir
+        </a>
+    </div>
 </div>
 
-<div class="row g-4">
+<!-- Configuración de papel -->
+<p class="section-title"><i class="bi bi-file-earmark me-1"></i>Configuración de papel</p>
+<div class="config-card card mb-4">
+    <div class="card-header"><i class="bi bi-file-earmark me-2"></i>Tipo de papel</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="config">
 
-    <!-- Configuración de papel -->
-    <div class="col-12 col-lg-4">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-dark text-white fw-semibold">
-                <i class="bi bi-file-earmark me-2"></i>Configuración de Papel
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">Tamaño</label>
+                <select name="tipo_papel" id="tipo_papel" class="form-select" onchange="actualizarDimensiones(this.value)">
+                    {% for val, label in TIPOS_PAPEL %}
+                    <option value="{{ val }}" {% if config.tipo_papel == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="config">
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Tipo de papel</label>
-                        <select name="tipo_papel" id="tipo_papel" class="form-select" onchange="actualizarDimensiones(this.value)">
-                            {% for val, label in TIPOS_PAPEL %}
-                            <option value="{{ val }}" {% if config.tipo_papel == val %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="row g-2 mb-3" id="dimensiones-custom" style="{% if config.tipo_papel != 'personalizado' %}display:none{% endif %}">
-                        <div class="col-6">
-                            <label class="form-label">Ancho (mm)</label>
-                            <input type="number" name="ancho_mm" class="form-control" value="{{ config.ancho_mm }}" step="0.1">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Alto (mm)</label>
-                            <input type="number" name="alto_mm" class="form-control" value="{{ config.alto_mm }}" step="0.1">
-                        </div>
-                    </div>
-                    <input type="hidden" name="ancho_mm" id="ancho_hidden" value="{{ config.ancho_mm }}">
-                    <input type="hidden" name="alto_mm" id="alto_hidden" value="{{ config.alto_mm }}">
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Orientación</label>
-                        <select name="orientacion" class="form-select">
-                            {% for val, label in ORIENTACIONES %}
-                            <option value="{{ val }}" {% if config.orientacion == val %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-dark w-100">
-                        <i class="bi bi-save me-1"></i>Guardar configuración
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Subir etiquetas por producto -->
-    <div class="col-12 col-lg-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-danger text-white fw-semibold">
-                <i class="bi bi-upload me-2"></i>Cargar / Actualizar PDFs
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Producto</th>
-                                <th>Delantera</th>
-                                <th>Especificaciones</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for item in items %}
-                        <tr>
-                            <td class="fw-semibold">{{ item.producto.nombre }}</td>
-                            <td>
-                                {% if item.etiqueta and item.etiqueta.archivo_delantera %}
-                                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Cargada</span>
-                                {% else %}
-                                <span class="badge bg-secondary">Sin PDF</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if item.etiqueta and item.etiqueta.archivo_especificaciones %}
-                                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Cargada</span>
-                                {% else %}
-                                <span class="badge bg-secondary">Sin PDF</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button class="btn btn-outline-danger btn-sm"
-                                        type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#upload-{{ item.producto.id_producto }}">
-                                    <i class="bi bi-upload"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr class="collapse" id="upload-{{ item.producto.id_producto }}">
-                            <td colspan="4" class="bg-light py-3 px-4">
-                                <form method="post" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="upload">
-                                    <input type="hidden" name="producto_id" value="{{ item.producto.id_producto }}">
-                                    <div class="row g-3">
-                                        <div class="col-12 col-sm-6">
-                                            <label class="form-label small fw-semibold">PDF Etiqueta Delantera</label>
-                                            <input type="file" name="archivo_delantera" class="form-control form-control-sm" accept=".pdf">
-                                        </div>
-                                        <div class="col-12 col-sm-6">
-                                            <label class="form-label small fw-semibold">PDF Especificaciones</label>
-                                            <input type="file" name="archivo_especificaciones" class="form-control form-control-sm" accept=".pdf">
-                                        </div>
-                                        <div class="col-12">
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="bi bi-cloud-upload me-1"></i>Subir PDFs
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+            <div id="dimensiones-custom" class="row g-2 mb-3" style="{% if config.tipo_papel != 'personalizado' %}display:none{% endif %}">
+                <div class="col-6">
+                    <label class="form-label small">Ancho (mm)</label>
+                    <input type="number" name="ancho_mm_custom" id="ancho_custom" class="form-control" value="{{ config.ancho_mm }}" step="0.1">
+                </div>
+                <div class="col-6">
+                    <label class="form-label small">Alto (mm)</label>
+                    <input type="number" name="alto_mm_custom" id="alto_custom" class="form-control" value="{{ config.alto_mm }}" step="0.1">
                 </div>
             </div>
+            <input type="hidden" name="ancho_mm" id="ancho_hidden" value="{{ config.ancho_mm }}">
+            <input type="hidden" name="alto_mm"  id="alto_hidden"  value="{{ config.alto_mm }}">
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold small">Orientación</label>
+                <div class="d-flex gap-2">
+                    {% for val, label in ORIENTACIONES %}
+                    <label class="flex-fill text-center border rounded-3 p-2 {% if config.orientacion == val %}border-dark fw-bold{% endif %}" style="cursor:pointer;font-size:.85rem;">
+                        <input type="radio" name="orientacion" value="{{ val }}" {% if config.orientacion == val %}checked{% endif %} class="d-none">
+                        {% if val == 'portrait' %}📄{% else %}🖼{% endif %} {{ label }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn-guardar-config">
+                <i class="bi bi-save"></i> Guardar configuración
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- PDFs por producto -->
+<p class="section-title"><i class="bi bi-upload me-1"></i>PDFs por producto</p>
+<div class="d-flex flex-column gap-3 mb-4">
+{% for item in items %}
+<div class="prod-card {% if item.etiqueta and item.etiqueta.archivo_delantera or item.etiqueta and item.etiqueta.archivo_especificaciones %}has-pdfs{% endif %}">
+    <div class="prod-header"
+         data-bs-toggle="collapse"
+         data-bs-target="#up-{{ item.producto.id_producto }}"
+         aria-expanded="false">
+        {% if item.producto.imagen %}
+        <img class="prod-img" src="{{ item.producto.imagen.url }}" alt="">
+        {% else %}
+        <div class="prod-img-placeholder">🔥</div>
+        {% endif %}
+        <div class="prod-info">
+            <div class="prod-nombre">{{ item.producto.nombre }}</div>
+            <div class="prod-badges">
+                <span class="pdf-badge {% if item.etiqueta and item.etiqueta.archivo_delantera %}ok{% else %}no{% endif %}">
+                    {% if item.etiqueta and item.etiqueta.archivo_delantera %}✓{% else %}–{% endif %} Delantera
+                </span>
+                <span class="pdf-badge {% if item.etiqueta and item.etiqueta.archivo_especificaciones %}ok{% else %}no{% endif %}">
+                    {% if item.etiqueta and item.etiqueta.archivo_especificaciones %}✓{% else %}–{% endif %} Especificaciones
+                </span>
+            </div>
         </div>
+        <i class="bi bi-chevron-down prod-toggle"></i>
     </div>
 
+    <div class="collapse" id="up-{{ item.producto.id_producto }}">
+        <div class="upload-panel">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="upload">
+                <input type="hidden" name="producto_id" value="{{ item.producto.id_producto }}">
+
+                <div class="mb-3">
+                    <p class="fw-semibold small mb-2">PDF Etiqueta Delantera</p>
+                    <div class="upload-zone" onclick="this.querySelector('input').click()">
+                        <label>
+                            <span class="upload-icon">📄</span>
+                            <span id="label-del-{{ item.producto.id_producto }}">
+                                {% if item.etiqueta and item.etiqueta.archivo_delantera %}
+                                Reemplazar PDF actual
+                                {% else %}
+                                Toca para seleccionar PDF
+                                {% endif %}
+                            </span>
+                            <input type="file" name="archivo_delantera" accept=".pdf"
+                                   onchange="mostrarNombre(this, 'label-del-{{ item.producto.id_producto }}')">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-1">
+                    <p class="fw-semibold small mb-2">PDF Especificaciones</p>
+                    <div class="upload-zone" onclick="this.querySelector('input').click()">
+                        <label>
+                            <span class="upload-icon">📋</span>
+                            <span id="label-esp-{{ item.producto.id_producto }}">
+                                {% if item.etiqueta and item.etiqueta.archivo_especificaciones %}
+                                Reemplazar PDF actual
+                                {% else %}
+                                Toca para seleccionar PDF
+                                {% endif %}
+                            </span>
+                            <input type="file" name="archivo_especificaciones" accept=".pdf"
+                                   onchange="mostrarNombre(this, 'label-esp-{{ item.producto.id_producto }}')">
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-subir">
+                    <i class="bi bi-cloud-upload-fill"></i> Subir PDFs
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
 </div>
 
 <script>
-const DIMENSIONES = {
-    'carta':  [216, 279],
-    'a4':     [210, 297],
-    'oficio': [216, 330],
-    'personalizado': [null, null],
-};
+const DIMS = { carta:[216,279], a4:[210,297], oficio:[216,330] };
 
 function actualizarDimensiones(tipo) {
     const custom = document.getElementById('dimensiones-custom');
-    const anchoH = document.getElementById('ancho_hidden');
-    const altoH  = document.getElementById('alto_hidden');
-    const dims = DIMENSIONES[tipo];
-
+    const aH = document.getElementById('ancho_hidden');
+    const altH = document.getElementById('alto_hidden');
     if (tipo === 'personalizado') {
         custom.style.display = '';
     } else {
         custom.style.display = 'none';
-        anchoH.value = dims[0];
-        altoH.value  = dims[1];
+        aH.value = DIMS[tipo][0];
+        altH.value = DIMS[tipo][1];
     }
 }
+
+function mostrarNombre(input, labelId) {
+    const span = document.getElementById(labelId);
+    if (input.files && input.files[0]) {
+        span.innerHTML = '<span class="file-name">✓ ' + input.files[0].name + '</span>';
+    }
+}
+
+// Orientación radio visual
+document.querySelectorAll('input[name="orientacion"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.querySelectorAll('label:has(input[name="orientacion"])').forEach(l => {
+            l.classList.remove('border-dark','fw-bold');
+        });
+        radio.closest('label').classList.add('border-dark','fw-bold');
+    });
+});
 </script>
 {% endblock %}
