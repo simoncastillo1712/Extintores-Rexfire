@@ -1,72 +1,118 @@
 {% extends 'base.html' %}
 {% load rexfire_filters %}
 {% block contenido %}
+<style>
+.admin-header { background:linear-gradient(135deg,#20c997 0%,#12a47a 100%); border-radius:16px; padding:18px 20px; color:#fff; margin-bottom:20px; }
+.admin-header h4 { font-size:1.2rem; font-weight:700; margin:0; }
+.btn-nuevo { background:#fff; color:#12a47a; border:none; border-radius:10px; padding:8px 16px; font-weight:700; font-size:.85rem; white-space:nowrap; }
+.vendedor-card { border:1.5px solid #e9ecef; border-radius:14px; background:#fff; padding:14px 16px; margin-bottom:10px; }
+.v-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.v-nombre { font-weight:700; font-size:.95rem; }
+.v-rut    { font-size:.78rem; color:#6c757d; }
+.v-meta   { font-size:.8rem; color:#495057; margin-top:4px; display:flex; flex-direction:column; gap:1px; }
+.v-stats  { display:flex; gap:16px; margin-top:10px; padding-top:10px; border-top:1px solid #f0f0f0; }
+.v-stat   { flex:1; text-align:center; }
+.v-stat-val { font-weight:700; font-size:.9rem; color:#212529; }
+.v-stat-lbl { font-size:.7rem; color:#6c757d; }
+.v-actions  { display:flex; gap:6px; margin-top:10px; }
+.btn-act  { flex:1; padding:8px; border-radius:9px; border:none; font-size:.82rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:5px; }
+.btn-comision { background:#d1e7dd; color:#0a3622; }
+.btn-edit { background:#ffc107; color:#000; }
+.btn-del  { background:#dc3545; color:#fff; }
+</style>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2 class="fw-bold mb-0">Vendedores</h2>
-  <a href="{% url 'crear_vendedor' %}" class="btn btn-primary btn-sm">
-    <i class="bi bi-person-plus"></i> Nuevo Vendedor
-  </a>
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-person-badge-fill me-2"></i>Vendedores</h4>
+        <a href="{% url 'crear_vendedor' %}" class="btn-nuevo"><i class="bi bi-plus-lg me-1"></i>Nuevo</a>
+    </div>
 </div>
 
 {% if data %}
-<div class="card shadow-sm">
-  <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-      <thead class="table-dark">
-        <tr>
-          <th>Nombre</th>
-          <th>RUT</th>
-          <th>Contacto</th>
-          <th class="text-center">Estado</th>
-          <th class="text-center">Ventas</th>
-          <th class="text-end">Neto total vendido</th>
-          <th class="text-end">Comisiones totales</th>
-          <th class="text-center">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for d in data %}
-        <tr>
-          <td><strong>{{ d.vendedor.nombre }}</strong></td>
-          <td>{{ d.vendedor.rut }}</td>
-          <td>
-            {% if d.vendedor.telefono %}<div>{{ d.vendedor.telefono }}</div>{% endif %}
-            {% if d.vendedor.email %}<div class="text-muted" style="font-size:0.82rem;">{{ d.vendedor.email }}</div>{% endif %}
-          </td>
-          <td class="text-center">
-            {% if d.vendedor.activo %}
-              <span class="badge bg-success">Activo</span>
-            {% else %}
-              <span class="badge bg-secondary">Inactivo</span>
-            {% endif %}
-          </td>
-          <td class="text-center">{{ d.num_ventas }}</td>
-          <td class="text-end">${{ d.total_neto|clp }}</td>
-          <td class="text-end text-success fw-bold">${{ d.total_comision|clp }}</td>
-          <td class="text-center">
-            <a href="{% url 'comisiones_vendedor' d.vendedor.id_vendedor %}" class="btn btn-sm btn-outline-success" title="Ver comisiones">
-              <i class="bi bi-graph-up"></i>
-            </a>
-            <a href="{% url 'editar_vendedor' d.vendedor.id_vendedor %}" class="btn btn-sm btn-warning" title="Editar">
-              <i class="bi bi-pencil"></i>
-            </a>
-            <form method="post" action="{% url 'eliminar_vendedor' d.vendedor.id_vendedor %}" style="display:inline;"
-                  onsubmit="return confirm('¿Eliminar vendedor {{ d.vendedor.nombre }}?');">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
-                <i class="bi bi-trash"></i>
-              </button>
+<!-- Mobile: cards -->
+<div class="d-md-none">
+    {% for d in data %}
+    <div class="vendedor-card">
+        <div class="v-top">
+            <div>
+                <div class="v-nombre">
+                    {{ d.vendedor.nombre }}
+                    {% if d.vendedor.activo %}<span class="badge bg-success ms-1" style="font-size:.68rem;">Activo</span>
+                    {% else %}<span class="badge bg-secondary ms-1" style="font-size:.68rem;">Inactivo</span>{% endif %}
+                </div>
+                <div class="v-rut">{{ d.vendedor.rut }}</div>
+                <div class="v-meta">
+                    {% if d.vendedor.telefono %}<span><i class="bi bi-telephone me-1"></i>{{ d.vendedor.telefono }}</span>{% endif %}
+                    {% if d.vendedor.email %}<span><i class="bi bi-envelope me-1"></i>{{ d.vendedor.email }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="v-stats">
+            <div class="v-stat">
+                <div class="v-stat-val">{{ d.num_ventas }}</div>
+                <div class="v-stat-lbl">Ventas</div>
+            </div>
+            <div class="v-stat">
+                <div class="v-stat-val">${{ d.total_neto|clp }}</div>
+                <div class="v-stat-lbl">Neto vendido</div>
+            </div>
+            <div class="v-stat">
+                <div class="v-stat-val" style="color:#198754;">${{ d.total_comision|clp }}</div>
+                <div class="v-stat-lbl">Comisiones</div>
+            </div>
+        </div>
+        <div class="v-actions">
+            <a href="{% url 'comisiones_vendedor' d.vendedor.id_vendedor %}" class="btn-act btn-comision"><i class="bi bi-graph-up"></i> Comisiones</a>
+            <a href="{% url 'editar_vendedor' d.vendedor.id_vendedor %}" class="btn-act btn-edit"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{% url 'eliminar_vendedor' d.vendedor.id_vendedor %}" onsubmit="return confirm('¿Eliminar {{ d.vendedor.nombre }}?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-act btn-del"><i class="bi bi-trash"></i></button>
             </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<!-- Desktop: tabla -->
+<div class="d-none d-md-block card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr><th>Nombre</th><th>RUT</th><th>Contacto</th><th class="text-center">Estado</th><th class="text-center">Ventas</th><th class="text-end">Neto</th><th class="text-end">Comisiones</th><th class="text-center">Acciones</th></tr>
+            </thead>
+            <tbody>
+                {% for d in data %}
+                <tr>
+                    <td><strong>{{ d.vendedor.nombre }}</strong></td>
+                    <td>{{ d.vendedor.rut }}</td>
+                    <td>
+                        {% if d.vendedor.telefono %}<div>{{ d.vendedor.telefono }}</div>{% endif %}
+                        {% if d.vendedor.email %}<div class="text-muted" style="font-size:.82rem;">{{ d.vendedor.email }}</div>{% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if d.vendedor.activo %}<span class="badge bg-success">Activo</span>
+                        {% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}
+                    </td>
+                    <td class="text-center">{{ d.num_ventas }}</td>
+                    <td class="text-end">${{ d.total_neto|clp }}</td>
+                    <td class="text-end fw-bold text-success">${{ d.total_comision|clp }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'comisiones_vendedor' d.vendedor.id_vendedor %}" class="btn btn-sm btn-outline-success me-1"><i class="bi bi-graph-up"></i></a>
+                        <a href="{% url 'editar_vendedor' d.vendedor.id_vendedor %}" class="btn btn-sm btn-warning me-1"><i class="bi bi-pencil"></i></a>
+                        <form method="post" action="{% url 'eliminar_vendedor' d.vendedor.id_vendedor %}" style="display:inline;" onsubmit="return confirm('¿Eliminar {{ d.vendedor.nombre }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% else %}
-<div class="alert alert-info">No hay vendedores registrados. <a href="{% url 'crear_vendedor' %}">Agrega el primero</a>.</div>
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-person-badge" style="font-size:3rem;opacity:.3;"></i>
+    <p class="mt-3">No hay vendedores. <a href="{% url 'crear_vendedor' %}">Agrega el primero</a>.</p>
+</div>
 {% endif %}
-
 {% endblock %}

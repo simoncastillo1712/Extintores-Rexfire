@@ -175,6 +175,7 @@
     </header>
     <main class="pb-5">
         <section class="container">
+            {% if request.resolver_match.url_name == 'inicio' %}
             <div class="hero-image-wrapper mb-4">
                 <img src="{% static 'img/fondoBanner.jpeg' %}" class="img-fluid w-100 rounded-4 shadow-sm" alt="banner extintores rexfire">
                 <div class="hero-overlay-text">
@@ -183,6 +184,7 @@
                     <p class="mb-0">Extintores certificados CESMEC con los mejores precios.</p>
                 </div>
             </div>
+            {% endif %}
 
             {% if messages %}
             <div class="mb-3">

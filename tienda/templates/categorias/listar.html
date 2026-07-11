@@ -1,63 +1,84 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block contenido%}
-<h2>Categorías</h2>
+{% block contenido %}
+<style>
+.admin-header { background:linear-gradient(135deg,#fd7e14 0%,#e8590c 100%); border-radius:16px; padding:18px 20px; color:#fff; margin-bottom:20px; }
+.admin-header h4 { font-size:1.2rem; font-weight:700; margin:0; }
+.btn-nuevo { background:#fff; color:#fd7e14; border:none; border-radius:10px; padding:8px 16px; font-weight:700; font-size:.85rem; white-space:nowrap; }
+.item-card { border:1.5px solid #e9ecef; border-radius:14px; background:#fff; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.item-card-nombre { font-weight:700; font-size:.95rem; color:#212529; }
+.item-card-desc  { font-size:.82rem; color:#6c757d; margin-top:2px; }
+.item-card-actions { display:flex; gap:6px; flex-shrink:0; }
+.btn-act { width:36px; height:36px; border-radius:9px; border:none; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
+.btn-edit { background:#ffc107; color:#000; }
+.btn-del  { background:#dc3545; color:#fff; }
+</style>
 
-<div class="mb-3">
-    <a href="{% url 'crear_categoria' %}" class="btn btn-success">Nueva Categoria</a>
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-tags-fill me-2"></i>Categorías</h4>
+        <a href="{% url 'crear_categoria' %}" class="btn-nuevo"><i class="bi bi-plus-lg me-1"></i>Nueva</a>
+    </div>
 </div>
 
-<div class="container">
-    <form method="get" class="mb-3 d-flex">
+<div class="d-flex gap-2 mb-4">
+    <form method="get" class="d-flex w-100 gap-2">
         <div class="input-group">
-            <span class="input-group-text" id="search-icon-categorias">
-                <i class="bi bi-search"></i>
-            </span>
-            <input type="text" name="q" placeholder="Buscar categorías" value="{{ q }}" class="form-control"
-                aria-describedby="search-icon-categorias" />
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="q" placeholder="Buscar categorías" value="{{ q }}" class="form-control border-start-0 ps-0">
         </div>
-        <button type="submit" class="btn btn-primary ms-2">Buscar</button>
+        <button type="submit" class="btn btn-primary">Buscar</button>
     </form>
 </div>
 
-{% if user.is_authenticated %}
 {% if categorias %}
-<table class="table table-striped table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>Nombre</th>
-            <th>Descripcion</th>
-            <th>Accion</th>
-
-        </tr>
-    </thead>
-    <tbody>
-        {% for categoria in categorias %}
-        <tr>
-            <td>{{ categoria.nombre }}</td>
-            <td>{{ categoria.descripcion }}</td>
-            <td>
-                <a href="{% url 'editar_categoria' categoria.id_categoria %}" class="btn btn-warning btn-sm">Editar</a>
-                <form method="post" action="{% url 'eliminar_categoria' categoria.id_categoria %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar esta categoría?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger btn-sm btn-eliminar">Eliminar</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<div class="alert alert-info">
-    <h4>No hay categorias disponibles</h4>
-    <p>¡Añade algunos categorias para comenzar!</p>
+<!-- Mobile: cards -->
+<div class="d-md-none">
+    {% for cat in categorias %}
+    <div class="item-card">
+        <div>
+            <div class="item-card-nombre">{{ cat.nombre }}</div>
+            {% if cat.descripcion %}<div class="item-card-desc">{{ cat.descripcion }}</div>{% endif %}
+        </div>
+        <div class="item-card-actions">
+            <a href="{% url 'editar_categoria' cat.id_categoria %}" class="btn-act btn-edit"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{% url 'eliminar_categoria' cat.id_categoria %}" onsubmit="return confirm('¿Eliminar {{ cat.nombre }}?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-act btn-del"><i class="bi bi-trash"></i></button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
 </div>
-{% endif %}
+<!-- Desktop: tabla -->
+<div class="d-none d-md-block card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr><th>Nombre</th><th>Descripción</th><th class="text-center">Acciones</th></tr>
+            </thead>
+            <tbody>
+                {% for cat in categorias %}
+                <tr>
+                    <td class="fw-semibold">{{ cat.nombre }}</td>
+                    <td>{{ cat.descripcion|default:"—" }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'editar_categoria' cat.id_categoria %}" class="btn btn-warning btn-sm me-1">Editar</a>
+                        <form method="post" action="{% url 'eliminar_categoria' cat.id_categoria %}" style="display:inline;" onsubmit="return confirm('¿Eliminar {{ cat.nombre }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% else %}
-<div class="alert alert-danger">
-    <h4>Acceso denegado</h4>
-    <p>Necesitas ser administrador para ver esta página.</p>
-    <a href="{% url 'login' %}" class="btn btn-primary">Iniciar Sesión</a>
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-tags" style="font-size:3rem;opacity:.3;"></i>
+    <p class="mt-3">No hay categorías. <a href="{% url 'crear_categoria' %}">Agrega la primera</a>.</p>
 </div>
 {% endif %}
 {% endblock %}
