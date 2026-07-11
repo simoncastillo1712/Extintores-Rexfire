@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(
-            sql="ALTER TABLE venta ADD COLUMN origen VARCHAR(10) NULL DEFAULT 'web';",
-            reverse_sql="ALTER TABLE venta DROP COLUMN origen;",
+            sql=migrations.RunSQL.noop,
+            reverse_sql=migrations.RunSQL.noop,
         ),
     ]

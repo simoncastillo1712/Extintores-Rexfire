@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(
-            sql="ALTER TABLE producto ADD COLUMN descripcion TEXT NULL;",
-            reverse_sql="ALTER TABLE producto DROP COLUMN descripcion;",
+            sql=migrations.RunSQL.noop,
+            reverse_sql=migrations.RunSQL.noop,
         ),
     ]
