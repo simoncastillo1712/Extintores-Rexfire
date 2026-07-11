@@ -1509,14 +1509,63 @@ def webhook_whatsapp(request):
 
 @login_required
 def impresora_etiquetas(request):
-    _CATS = ['PQS (Polvo Químico Seco)', 'CO2 (Dióxido de Carbono)']
-    productos = Producto.objects.filter(
-        Q(id_categoria__nombre__in=_CATS) |
-        Q(id_categoria__nombre='Accesorios', nombre__icontains='señal')
-    ).select_related('id_categoria').order_by('id_categoria__nombre', 'id_producto')
-    etiquetas = {e.producto_id: e for e in EtiquetaProducto.objects.all()}
-    items = [{'producto': p, 'etiqueta': etiquetas.get(p.id_producto)} for p in productos]
-    return render(request, 'etiquetas/lista.html', {'items': items})
+    from pathlib import Path
+    from django.templatetags.static import static as _static
+
+    docs_dir = Path(settings.BASE_DIR) / 'tienda' / 'static' / 'docs'
+    try:
+        doc_files = {f.name for f in docs_dir.iterdir() if f.is_file()}
+    except FileNotFoundError:
+        doc_files = set()
+
+    def doc_url(filename):
+        return _static(f'docs/{filename}') if filename in doc_files else None
+
+    SPEC_CANDIDATES = {
+        '1KG':  ['Especificaciones1KG.pdf',  'Especificaciones 1KG.pdf'],
+        '2KG':  ['Especificaciones 2KG.pdf', 'Especificaciones2KG.pdf'],
+        '4KG':  ['Especificaciones 4KG.pdf', 'Especificaciones4KG.pdf'],
+        '6KG':  ['Especificaciones 6KG.pdf', 'Especificaciones6KG.pdf'],
+        '10KG': ['Especificaciones 10KG.pdf','Especificaciones10KG.pdf'],
+        '25KG': ['Especificaciones 25KG.pdf','Especificaciones25KG.pdf'],
+        '50KG': ['Especificaciones 50KG.pdf','Especificaciones50KG.pdf'],
+    }
+
+    MODELOS_DEF = [
+        {'kg': '1KG',  'nombre': 'Extintor 1KG PQS',  'etiq': '1KG.pdf',  'img': 'img/extintor1kg.webp'},
+        {'kg': '2KG',  'nombre': 'Extintor 2KG PQS',  'etiq': '2 KG.pdf', 'img': 'img/extintor2kg.webp'},
+        {'kg': '4KG',  'nombre': 'Extintor 4KG PQS',  'etiq': '4KG.pdf',  'img': 'img/extintor4kg.webp'},
+        {'kg': '6KG',  'nombre': 'Extintor 6KG PQS',  'etiq': '6KG.pdf',  'img': 'img/extintor6kg.webp'},
+        {'kg': '10KG', 'nombre': 'Extintor 10KG PQS', 'etiq': '10KG.pdf', 'img': 'img/extintor10kg.webp'},
+        {'kg': '25KG', 'nombre': 'Extintor 25KG PQS', 'etiq': '25KG.pdf', 'img': 'img/extintor25kg.webp'},
+        {'kg': '50KG', 'nombre': 'Extintor 50KG PQS', 'etiq': '50KG.pdf', 'img': 'img/extintor50kg.png'},
+    ]
+
+    modelos = []
+    for m in MODELOS_DEF:
+        spec_file = next((n for n in SPEC_CANDIDATES[m['kg']] if n in doc_files), None)
+        modelos.append({
+            'kg':       m['kg'],
+            'nombre':   m['nombre'],
+            'img_url':  _static(m['img']),
+            'etiq_url': doc_url(m['etiq']),
+            'spec_url': _static(f"docs/{spec_file}") if spec_file else None,
+        })
+
+    STANDALONE_DEF = [
+        {'nombre': 'Etiqueta Frontal Chica', 'doc': 'Etiqueta FRONTALCHICA.pdf',  'color': '#dc3545', 'icono': 'bi-tag-fill'},
+        {'nombre': 'Etiqueta Frontal Grande','doc': 'Etiqueta FRONTALGRANDE.pdf', 'color': '#c0392b', 'icono': 'bi-tag'},
+        {'nombre': 'Fechador Chico',         'doc': 'fechadorCHICO.pdf',           'color': '#0d6efd', 'icono': 'bi-calendar-check-fill'},
+        {'nombre': 'Fechador Grande',        'doc': 'fechadorGRANDE.pdf',          'color': '#0a58ca', 'icono': 'bi-calendar-check'},
+    ]
+    standalone = []
+    for s in STANDALONE_DEF:
+        standalone.append({**s, 'url': doc_url(s['doc'])})
+
+    return render(request, 'etiquetas/lista.html', {
+        'modelos':    modelos,
+        'standalone': standalone,
+    })
 
 
 @login_required

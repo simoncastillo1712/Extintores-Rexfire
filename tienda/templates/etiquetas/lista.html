@@ -1,128 +1,175 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block contenido %}
 <style>
-    .etiqueta-header {
-        background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
-        border-radius: 16px;
-        padding: 20px 24px;
-        color: white;
-        margin-bottom: 24px;
-    }
-    .etiqueta-header h4 { font-size: 1.3rem; font-weight: 700; margin: 0; }
-    .etiqueta-header p  { margin: 4px 0 0; opacity: .85; font-size: .9rem; }
+/* ── Header ── */
+.etiq-header {
+    background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+    border-radius: 16px; padding: 18px 20px; color: #fff; margin-bottom: 20px;
+}
+.etiq-header h4 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.etiq-header p  { margin: 4px 0 0; opacity: .85; font-size: .85rem; }
 
-    .producto-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 2px 12px rgba(0,0,0,.08);
-        overflow: hidden;
-        transition: box-shadow .2s;
-    }
-    .producto-card:active { box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+/* ── Section label ── */
+.sec-label {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; padding: 4px 12px; border-radius: 20px;
+    display: inline-block; margin-bottom: 14px;
+}
+.sec-label-red   { background: #fde8ea; color: #a71d2a; }
+.sec-label-orange{ background: #fff3cd; color: #856404; }
+.sec-label-blue  { background: #dbeafe; color: #1d4ed8; }
 
-    .producto-img-wrap {
-        background: #f8f9fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 120px;
-    }
-    .producto-img-wrap img {
-        max-height: 100px;
-        max-width: 100%;
-        object-fit: contain;
-        padding: 8px;
-    }
-    .producto-nombre {
-        font-weight: 700;
-        font-size: 1rem;
-        color: #212529;
-        margin-bottom: 4px;
-    }
-    .sin-pdf {
-        background: #fff3cd;
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: .83rem;
-        color: #856404;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .btn-imprimir {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: .9rem;
-        padding: 10px 16px;
-        width: 100%;
-        border: none;
-        transition: opacity .15s;
-    }
-    .btn-imprimir:active { opacity: .8; }
-    .btn-del  { background: #dc3545; color: #fff; }
-    .btn-esp  { background: #fff; color: #dc3545; border: 2px solid #dc3545 !important; }
-    .updated-badge {
-        font-size: .75rem;
-        color: #adb5bd;
-        margin-top: 6px;
-    }
+/* ── Card base ── */
+.etiq-card {
+    border: none; border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    overflow: hidden; background: #fff; height: 100%;
+}
+
+/* ── Modelo card ── */
+.modelo-img-wrap {
+    background: #f8f9fa; display: flex; align-items: center;
+    justify-content: center; height: 130px;
+}
+.modelo-img-wrap img { max-height: 110px; max-width: 90%; object-fit: contain; padding: 8px; }
+.modelo-kg-badge {
+    display: inline-block; background: #dc3545; color: #fff;
+    font-size: .7rem; font-weight: 700; padding: 2px 9px;
+    border-radius: 20px; margin-bottom: 4px;
+}
+.modelo-nombre { font-weight: 700; font-size: .88rem; color: #212529; margin-bottom: 10px; }
+
+/* ── Standalone card ── */
+.standalone-icon-wrap {
+    display: flex; align-items: center; justify-content: center;
+    height: 100px;
+}
+
+/* ── Buttons ── */
+.btn-etiq {
+    display: flex; align-items: center; justify-content: center;
+    gap: 7px; border-radius: 10px; font-weight: 600; font-size: .85rem;
+    padding: 10px; width: 100%; border: none; text-decoration: none;
+    transition: opacity .15s;
+}
+.btn-etiq:active, .btn-etiq:hover { opacity: .88; text-decoration: none; }
+.btn-etiq-rojo  { background: #dc3545; color: #fff; }
+.btn-etiq-borde { background: #fff; color: #dc3545; border: 2px solid #dc3545 !important; }
+.btn-etiq-azul  { background: #0d6efd; color: #fff; }
+.btn-etiq-verde { background: #198754; color: #fff; }
+.btn-etiq-gris  { background: #e9ecef; color: #6c757d; cursor: default; pointer-events: none; }
+
+.card-body-pad { padding: 12px 14px 16px; }
+
+.pendiente-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: #f8f9fa; border-radius: 10px;
+    padding: 9px 12px; font-size: .82rem; color: #6c757d;
+    border: 1.5px dashed #dee2e6;
+}
 </style>
 
-<div class="etiqueta-header">
+<!-- ══ Header ══ -->
+<div class="etiq-header">
     <div class="d-flex justify-content-between align-items-start">
         <div>
             <h4><i class="bi bi-printer-fill me-2"></i>Impresora de Etiquetas</h4>
-            <p>Selecciona el modelo y tipo de etiqueta</p>
+            <p>Selecciona el modelo o tipo de etiqueta para imprimir</p>
         </div>
-        <a href="{% url 'ajuste_impresion' %}" class="btn btn-light btn-sm fw-semibold" style="border-radius:10px;">
+        <a href="{% url 'ajuste_impresion' %}" class="btn btn-light btn-sm fw-semibold" style="border-radius:10px; white-space:nowrap;">
             <i class="bi bi-gear me-1"></i>Ajuste
         </a>
     </div>
 </div>
 
-<div class="row g-3">
-{% for item in items %}
-<div class="col-12 col-sm-6 col-lg-4">
-    <div class="producto-card card h-100">
-        <div class="producto-img-wrap">
-            {% if item.producto.imagen %}
-            <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}">
-            {% else %}
-            <i class="bi bi-fire text-danger" style="font-size:2.8rem;opacity:.35;"></i>
-            {% endif %}
-        </div>
-        <div class="card-body pb-3">
-            <p class="producto-nombre">{{ item.producto.nombre }}</p>
-
-            {% if item.etiqueta %}
-                <div class="d-grid gap-2 mt-2">
-                    {% if item.etiqueta.archivo_delantera %}
-                    <a href="{% url 'imprimir_etiqueta' item.etiqueta.pk %}?tipo=delantera"
-                       class="btn-imprimir btn-del" target="_blank">
-                        <i class="bi bi-printer-fill"></i> Etiqueta Delantera
-                    </a>
-                    {% endif %}
-                    {% if item.etiqueta.archivo_especificaciones %}
-                    <a href="{% url 'imprimir_etiqueta' item.etiqueta.pk %}?tipo=especificaciones"
-                       class="btn-imprimir btn-esp" target="_blank">
-                        <i class="bi bi-file-text"></i> Especificaciones
-                    </a>
-                    {% endif %}
+<!-- ══ SECCIÓN 1: ETIQUETAS POR MODELO ══ -->
+<div class="mb-4">
+    <span class="sec-label sec-label-red"><i class="bi bi-fire me-1"></i>Etiquetas por Modelo</span>
+    <div class="row g-3">
+        {% for m in modelos %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="etiq-card card">
+                <div class="modelo-img-wrap">
+                    <img src="{{ m.img_url }}" alt="{{ m.nombre }}">
                 </div>
-                <p class="updated-badge text-center"><i class="bi bi-clock me-1"></i>{{ item.etiqueta.updated_at|date:"d/m/Y" }}</p>
-            {% else %}
-                <div class="sin-pdf mt-2">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span>Sin PDFs cargados aún</span>
+                <div class="card-body-pad">
+                    <span class="modelo-kg-badge">{{ m.kg }}</span>
+                    <div class="modelo-nombre">{{ m.nombre }}</div>
+                    <div class="d-grid gap-2">
+                        {% if m.etiq_url %}
+                        <a href="{{ m.etiq_url }}" target="_blank" class="btn-etiq btn-etiq-rojo">
+                            <i class="bi bi-printer-fill"></i> Imprimir Etiquetas
+                        </a>
+                        {% else %}
+                        <span class="pendiente-badge">
+                            <i class="bi bi-hourglass-split"></i> Sin etiqueta aún
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endif %}
+            </div>
         </div>
+        {% endfor %}
     </div>
 </div>
-{% endfor %}
+
+<!-- ══ SECCIÓN 2: ETIQUETAS Y FECHADORES ══ -->
+<div class="mb-4">
+    <span class="sec-label sec-label-orange"><i class="bi bi-tag-fill me-1"></i>Etiquetas y Fechadores</span>
+    <div class="row g-3">
+        {% for s in standalone %}
+        <div class="col-6 col-md-3">
+            <div class="etiq-card card">
+                <div class="standalone-icon-wrap" style="background:{{ s.color }}18;">
+                    <i class="bi {{ s.icono }}" style="font-size:2.8rem;color:{{ s.color }};opacity:.75;"></i>
+                </div>
+                <div class="card-body-pad">
+                    <div class="modelo-nombre" style="font-size:.85rem;">{{ s.nombre }}</div>
+                    {% if s.url %}
+                    <a href="{{ s.url }}" target="_blank" class="btn-etiq" style="background:{{ s.color }};color:#fff;">
+                        <i class="bi bi-printer-fill"></i> Imprimir
+                    </a>
+                    {% else %}
+                    <span class="pendiente-badge">
+                        <i class="bi bi-hourglass-split"></i> Sin archivo aún
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<!-- ══ SECCIÓN 3: ESPECIFICACIONES TÉCNICAS ══ -->
+<div class="mb-2">
+    <span class="sec-label sec-label-blue"><i class="bi bi-file-earmark-text me-1"></i>Especificaciones Técnicas</span>
+    <div class="row g-3">
+        {% for m in modelos %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="etiq-card card">
+                <div class="modelo-img-wrap">
+                    <img src="{{ m.img_url }}" alt="{{ m.nombre }}">
+                </div>
+                <div class="card-body-pad">
+                    <span class="modelo-kg-badge" style="background:#0d6efd;">{{ m.kg }}</span>
+                    <div class="modelo-nombre">{{ m.nombre }}</div>
+                    {% if m.spec_url %}
+                    <a href="{{ m.spec_url }}" target="_blank" class="btn-etiq btn-etiq-azul">
+                        <i class="bi bi-file-earmark-text-fill"></i> Ver Especificaciones
+                    </a>
+                    {% else %}
+                    <div class="pendiente-badge">
+                        <i class="bi bi-clock-history text-warning"></i>
+                        <span style="font-size:.78rem;">Pendiente de carga</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
 {% endblock %}
