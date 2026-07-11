@@ -1,9 +1,23 @@
+import shutil
+from pathlib import Path
+
+from django.conf import settings
 from django.core.management.base import BaseCommand
+
 from tienda.models import Categoria, Producto
 
 
 class Command(BaseCommand):
     help = 'Carga las categorías y productos de Extintores REXFIRE'
+
+    def _copiar_imagen(self, filename):
+        src = Path(settings.BASE_DIR) / 'tienda' / 'static' / 'img' / filename
+        dest_dir = Path(settings.MEDIA_ROOT) / 'productos'
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest = dest_dir / filename
+        if src.exists() and not dest.exists():
+            shutil.copy2(src, dest)
+        return f'productos/{filename}' if src.exists() else ''
 
     def handle(self, *args, **options):
         # Categorías
@@ -36,6 +50,7 @@ class Command(BaseCommand):
                 'precio': 9500,
                 'stock': 100,
                 'id_categoria': cat_pqs,
+                'imagen_src': 'extintor1kg.webp',
                 'descripcion': (
                     'Fosfato Monoamónico 75% | Potencial de Extinción 1A:2B-C | '
                     'Fuegos Clase A-B-C | Gas Propulsor: Nitrógeno | '
@@ -48,6 +63,7 @@ class Command(BaseCommand):
                 'precio': 14500,
                 'stock': 80,
                 'id_categoria': cat_pqs,
+                'imagen_src': 'extintor2kg.webp',
                 'descripcion': (
                     'Fosfato Monoamónico 75% | Potencial de Extinción 2A:5B-C | '
                     'Fuegos Clase A-B-C | Gas Propulsor: Nitrógeno | '
@@ -60,6 +76,7 @@ class Command(BaseCommand):
                 'precio': 23500,
                 'stock': 60,
                 'id_categoria': cat_pqs,
+                'imagen_src': 'extintor4kg.webp',
                 'descripcion': (
                     'Fosfato Monoamónico 75% | Potencial de Extinción 4A:10B-C | '
                     'Fuegos Clase A-B-C | Gas Propulsor: Nitrógeno | '
@@ -72,6 +89,7 @@ class Command(BaseCommand):
                 'precio': 28500,
                 'stock': 50,
                 'id_categoria': cat_pqs,
+                'imagen_src': 'extintor6kg.webp',
                 'descripcion': (
                     'Fosfato Monoamónico 75% | Potencial de Extinción 6A:20B-C | '
                     'Fuegos Clase A-B-C | Gas Propulsor: Nitrógeno | '
@@ -84,6 +102,7 @@ class Command(BaseCommand):
                 'precio': 39500,
                 'stock': 30,
                 'id_categoria': cat_pqs,
+                'imagen_src': 'extintor10kg.webp',
                 'descripcion': (
                     'Fosfato Monoamónico 75% | Potencial de Extinción 10A:40B-C | '
                     'Fuegos Clase A-B-C | Gas Propulsor: Nitrógeno | '
@@ -97,6 +116,7 @@ class Command(BaseCommand):
                 'precio': 58500,
                 'stock': 20,
                 'id_categoria': cat_co2,
+                'imagen_src': 'extintor5kgCO2.webp',
                 'descripcion': (
                     'Aislante Eléctrico hasta 100.000 Volts | Potencial de Extinción 5B:C | '
                     'Fuegos Clase B-C | Tiempo de Descarga 21 seg. | '
@@ -109,6 +129,7 @@ class Command(BaseCommand):
                 'precio': 250000,
                 'stock': 10,
                 'id_categoria': cat_pqs,
+                'imagen_src': 'extintor25kg.webp',
                 'descripcion': (
                     'Fosfato Monoamónico 75% | Potencial de Extinción 40A:60B-C | '
                     'Fuegos Clase A-B-C | Gas Propulsor: Nitrógeno | '
@@ -121,6 +142,7 @@ class Command(BaseCommand):
                 'precio': 290000,
                 'stock': 5,
                 'id_categoria': cat_pqs,
+                'imagen_src': 'extintor50kg.png',
                 'descripcion': (
                     'Fosfato Monoamónico 75% | Potencial de Extinción 40A:80B-C | '
                     'Fuegos Clase A-B-C | Gas Propulsor: Nitrógeno | '
@@ -132,6 +154,7 @@ class Command(BaseCommand):
         ]
 
         for p in productos:
+            imagen_path = self._copiar_imagen(p.pop('imagen_src'))
             obj, created = Producto.objects.update_or_create(
                 nombre=p['nombre'],
                 defaults={
@@ -139,6 +162,7 @@ class Command(BaseCommand):
                     'stock': p['stock'],
                     'id_categoria': p['id_categoria'],
                     'descripcion': p['descripcion'],
+                    'imagen': imagen_path,
                 }
             )
             if created:
