@@ -1509,14 +1509,13 @@ def webhook_whatsapp(request):
 
 @login_required
 def impresora_etiquetas(request):
-    productos = Producto.objects.all().order_by('id_producto')
+    _CATS = ['PQS (Polvo Químico Seco)', 'CO2 (Dióxido de Carbono)']
+    productos = Producto.objects.filter(
+        Q(id_categoria__nombre__in=_CATS) |
+        Q(id_categoria__nombre='Accesorios', nombre__icontains='señal')
+    ).select_related('id_categoria').order_by('id_categoria__nombre', 'id_producto')
     etiquetas = {e.producto_id: e for e in EtiquetaProducto.objects.all()}
-    items = []
-    for p in productos:
-        items.append({
-            'producto': p,
-            'etiqueta': etiquetas.get(p.id_producto),
-        })
+    items = [{'producto': p, 'etiqueta': etiquetas.get(p.id_producto)} for p in productos]
     return render(request, 'etiquetas/lista.html', {'items': items})
 
 
@@ -1537,7 +1536,11 @@ def imprimir_etiqueta(request, pk):
 @login_required
 def ajuste_impresion(request):
     config = ConfiguracionEtiqueta.get()
-    productos = Producto.objects.all().order_by('id_producto')
+    _CATS = ['PQS (Polvo Químico Seco)', 'CO2 (Dióxido de Carbono)']
+    productos = Producto.objects.filter(
+        Q(id_categoria__nombre__in=_CATS) |
+        Q(id_categoria__nombre='Accesorios', nombre__icontains='señal')
+    ).select_related('id_categoria').order_by('id_categoria__nombre', 'id_producto')
     etiquetas = {e.producto_id: e for e in EtiquetaProducto.objects.select_related('producto')}
 
     if request.method == 'POST':
@@ -1579,3 +1582,18 @@ def ajuste_impresion(request):
         'TIPOS_PAPEL': ConfiguracionEtiqueta.TIPOS_PAPEL,
         'ORIENTACIONES': ConfiguracionEtiqueta.ORIENTACIONES,
     })
+
+
+@login_required
+def impresora_certificados(request):
+    return render(request, 'certificados/lista.html')
+
+
+@login_required
+def certificado_recarga(request):
+    return render(request, 'certificados/recarga.html')
+
+
+@login_required
+def certificado_venta(request):
+    return render(request, 'certificados/venta.html')

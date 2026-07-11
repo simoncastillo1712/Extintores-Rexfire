@@ -71,4 +71,9 @@ urlpatterns = [
     path('etiquetas/',                         views.impresora_etiquetas,  name='impresora_etiquetas'),
     path('etiquetas/<int:pk>/imprimir/',       views.imprimir_etiqueta,    name='imprimir_etiqueta'),
     path('etiquetas/ajuste/',                  views.ajuste_impresion,     name='ajuste_impresion'),
+
+    # CERTIFICADOS
+    path('certificados/',                      views.impresora_certificados, name='impresora_certificados'),
+    path('certificados/recarga/',              views.certificado_recarga,    name='certificado_recarga'),
+    path('certificados/venta/',                views.certificado_venta,      name='certificado_venta'),
 ]

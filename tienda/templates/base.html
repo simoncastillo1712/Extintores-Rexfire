@@ -134,13 +134,16 @@
 
                                     <!-- Sección Etiquetas -->
                                     <li><h6 class="dropdown-header text-uppercase" style="font-size:0.7rem;letter-spacing:.08em;">
-                                        <i class="bi bi-printer text-danger"></i> Etiquetas
+                                        <i class="bi bi-printer text-danger"></i> Impresión
                                     </h6></li>
                                     <li><a class="dropdown-item" href="{% url 'impresora_etiquetas' %}">
                                         <i class="bi bi-printer-fill me-2 text-danger"></i>Impresora de Etiquetas
                                     </a></li>
                                     <li><a class="dropdown-item" href="{% url 'ajuste_impresion' %}">
                                         <i class="bi bi-gear me-2 text-secondary"></i>Ajuste Impresión
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'impresora_certificados' %}">
+                                        <i class="bi bi-patch-check-fill me-2 text-success"></i>Certificados
                                     </a></li>
 
                                 </ul>

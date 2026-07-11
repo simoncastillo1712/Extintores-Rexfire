@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificado de Recarga – REXFIRE</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<style>
+/* ── Pantalla ── */
+body { background:#e9ecef; margin:0; }
+.toolbar {
+    position:sticky; top:0; z-index:200;
+    background:#1a1a2e;
+    padding:10px 14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.35);
+}
+.toolbar-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.toolbar-title { color:#fff; font-weight:700; font-size:.95rem; flex:1; }
+.btn-back { background:#333; color:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:.85rem; text-decoration:none; display:flex; align-items:center; gap:5px; }
+.btn-print { background:#fd7e14; color:#fff; border:none; border-radius:8px; padding:7px 16px; font-weight:700; font-size:.9rem; display:flex; align-items:center; gap:6px; }
+.toolbar label { color:#adb5bd; font-size:.72rem; margin-bottom:2px; display:block; }
+.toolbar input { background:#2c2c3e; border:1px solid #444; color:#fff; border-radius:6px; padding:6px 10px; font-size:.85rem; width:100%; }
+.toolbar input::placeholder { color:#666; }
+.toolbar input:focus { outline:none; border-color:#fd7e14; background:#333; color:#fff; }
+
+/* ── Certificado (pantalla) ── */
+.cert-wrap {
+    max-width:780px; margin:20px auto 40px;
+    background:#fff;
+    box-shadow:0 2px 20px rgba(0,0,0,.15);
+    padding:36px 44px;
+    font-family:'Times New Roman', Times, serif;
+    font-size:11pt;
+}
+.cert-logo { height:55px; }
+.cert-empresa { font-size:1.1rem; font-weight:700; color:#c0392b; letter-spacing:.03em; }
+.cert-empresa-sub { font-size:.78rem; color:#555; }
+.cert-divider { border:0; border-top:3px solid #c0392b; margin:12px 0; }
+.cert-titulo {
+    text-align:center; font-weight:700; font-size:11pt;
+    text-transform:uppercase; letter-spacing:.04em;
+    border:2px solid #c0392b; color:#c0392b;
+    padding:12px 16px; margin:20px 0;
+    line-height:1.5;
+}
+.cert-body { text-align:justify; line-height:1.9; margin-bottom:20px; }
+.cert-table { width:100%; border-collapse:collapse; margin-bottom:16px; font-size:9.5pt; }
+.cert-table th { background:#c0392b; color:#fff; padding:7px 10px; text-align:center; border:1px solid #c0392b; font-size:8.5pt; letter-spacing:.04em; }
+.cert-table td { border:1px solid #bbb; padding:6px 8px; text-align:center; vertical-align:middle; }
+.cert-table tbody tr:nth-child(even) { background:#fdf5f5; }
+.cert-num { font-weight:700; color:#333; min-width:28px; }
+.cert-cierre { text-align:justify; line-height:1.8; margin-bottom:28px; }
+.cert-ciudad { color:#555; font-size:10pt; margin-bottom:36px; }
+.cert-firma { text-align:center; padding-top:10px; }
+.cert-firma-linea { border-top:1px solid #333; width:220px; margin:0 auto 8px; }
+.cert-firma-nombre { font-weight:700; font-size:10pt; }
+.cert-firma-cargo { font-size:9pt; color:#444; }
+
+/* ── Inputs inline en la tabla ── */
+.cinput {
+    border:none; border-bottom:1px dashed #ccc;
+    background:#fafafa; padding:1px 3px;
+    font-size:inherit; font-family:inherit;
+    text-align:center; width:100%;
+    box-sizing:border-box;
+}
+.cinput:focus { outline:none; border-bottom-color:#c0392b; background:#fff9f9; }
+.btn-row-del {
+    border:none; background:none; color:#dc3545;
+    font-size:1rem; padding:0 3px; cursor:pointer; line-height:1;
+}
+
+/* ── Impresión ── */
+@media print {
+    body { background:#fff; }
+    .toolbar, .d-print-none { display:none !important; }
+    .cert-wrap { box-shadow:none; margin:0; padding:12mm 16mm; max-width:100%; }
+    @page { size:A4 portrait; margin:8mm; }
+    .cinput {
+        border:none !important; background:transparent !important;
+        box-shadow:none !important;
+    }
+    .cert-table tbody tr:nth-child(even) { background:#fdf5f5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .cert-table th { background:#c0392b !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOOLBAR ══ -->
+<div class="toolbar d-print-none">
+    <div class="toolbar-top">
+        <a href="{% url 'impresora_certificados' %}" class="btn-back"><i class="bi bi-arrow-left"></i> Volver</a>
+        <span class="toolbar-title"><i class="bi bi-arrow-repeat me-1" style="color:#fd7e14;"></i>Cert. de Recarga</span>
+        <button onclick="window.print()" class="btn-print"><i class="bi bi-printer-fill"></i> Imprimir</button>
+    </div>
+    <div class="row g-2">
+        <div class="col-12 col-md-5">
+            <label>Destinatario (empresa / persona)</label>
+            <input type="text" id="inp-dest" placeholder="Ej: Empresa ABC Ltda." oninput="sync('txt-dest',this.value,'__________________')">
+        </div>
+        <div class="col-6 col-md-3">
+            <label>Tipo de lugar</label>
+            <input type="text" id="inp-lugar" placeholder="edificio / local / empresa" oninput="sync('txt-lugar',this.value,'__________')">
+        </div>
+        <div class="col-6 col-md-4">
+            <label>Ciudad y fecha</label>
+            <input type="text" id="inp-ciudad" oninput="sync('txt-ciudad',this.value,'')">
+        </div>
+    </div>
+</div>
+
+<!-- ══ CERTIFICADO ══ -->
+<div class="cert-wrap" id="certificado">
+
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center gap-3">
+        <img src="{% static 'img/Logo sin fondo.png' %}" alt="REXFIRE" class="cert-logo">
+        <div>
+            <div class="cert-empresa">EXTINTORES REXFIRE</div>
+            <div class="cert-empresa-sub">Santa Gemita 909 L.202B, Maipú &nbsp;|&nbsp; +569 7555 5423</div>
+            <div class="cert-empresa-sub">extintoresrexfire@gmail.com &nbsp;|&nbsp; www.extintoresrexfire.cl</div>
+        </div>
+    </div>
+    <hr class="cert-divider">
+
+    <!-- Título -->
+    <div class="cert-titulo">
+        CERTIFICADO DE OPERATIVIDAD Y GARANTÍA<br>
+        POR RECARGA DE EXTINTORES DE INCENDIO
+    </div>
+
+    <!-- Cuerpo -->
+    <p class="cert-body">
+        Mediante la presente, certificamos que los extintores del listado, destinados a la
+        cobertura del riesgo de incendio de <strong id="txt-lugar">__________</strong>
+        de <strong id="txt-dest">__________________</strong>, se encuentran debidamente
+        recargados y mantenidos según la <strong>Norma Chilena 1180-2008 Acreditado por INN</strong>.
+        Estos extintores cuentan con una garantía de un año sobre su operatividad y eficacia,
+        tomando como referencia el fechero ubicado en el cuerpo del extintor que indica su
+        fecha de vencimiento.
+    </p>
+
+    <!-- Tabla -->
+    <table class="cert-table">
+        <thead>
+            <tr>
+                <th style="width:36px;">N°</th>
+                <th>TIPO</th>
+                <th>CLASE</th>
+                <th>PESO<br>KG</th>
+                <th>FECHA VENC.<br>CARGA</th>
+                <th>N° SERIE</th>
+                <th class="d-print-none" style="width:30px;"></th>
+            </tr>
+        </thead>
+        <tbody id="cert-tbody"></tbody>
+    </table>
+
+    <div class="d-print-none mb-4">
+        <button onclick="agregarFila()" class="btn btn-sm btn-outline-danger" style="border-radius:8px;">
+            <i class="bi bi-plus-circle me-1"></i> Agregar extintor
+        </button>
+    </div>
+
+    <!-- Cierre -->
+    <p class="cert-cierre">
+        Se expide el presente certificado a solicitud del interesado para los fines que estime convenientes.
+    </p>
+
+    <p class="cert-ciudad" id="txt-ciudad"></p>
+
+    <!-- Firma -->
+    <div class="cert-firma">
+        <div class="cert-firma-linea"></div>
+        <div class="cert-firma-nombre">Mario Barahona Q.</div>
+        <div class="cert-firma-cargo">JEFE OPERACIONES</div>
+        <div class="cert-firma-cargo" style="font-weight:700;">EXTINTORES REXFIRE</div>
+    </div>
+
+</div>
+
+<script>
+function sync(id, val, fallback) {
+    document.getElementById(id).textContent = val.trim() || fallback;
+}
+
+let _uid = 0;
+function agregarFila() {
+    _uid++;
+    const uid = _uid;
+    const tbody = document.getElementById('cert-tbody');
+    const n = tbody.rows.length + 1;
+    const tr = document.createElement('tr');
+    tr.id = 'r' + uid;
+    tr.innerHTML = `
+        <td class="cert-num n-cell">${String(n).padStart(2,'0')}</td>
+        <td><input class="cinput" style="width:54px;" placeholder="PQS"></td>
+        <td><input class="cinput" style="width:46px;" placeholder="ABC"></td>
+        <td><input class="cinput" style="width:40px;" placeholder="6"></td>
+        <td><input class="cinput" style="width:110px;" placeholder="ABRIL 2027"></td>
+        <td><input class="cinput" style="width:80px;" placeholder="00000"></td>
+        <td class="d-print-none"><button class="btn-row-del" onclick="eliminarFila(${uid})">&#x2715;</button></td>
+    `;
+    tbody.appendChild(tr);
+}
+
+function eliminarFila(uid) {
+    const el = document.getElementById('r' + uid);
+    if (el) el.remove();
+    renumerar();
+}
+
+function renumerar() {
+    document.querySelectorAll('#cert-tbody .n-cell').forEach((td, i) => {
+        td.textContent = String(i + 1).padStart(2, '0');
+    });
+}
+
+// Fecha por defecto
+const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const hoy = new Date();
+const fechaDef = `Santiago de Chile, ${meses[hoy.getMonth()]} ${hoy.getFullYear()}`;
+document.getElementById('inp-ciudad').value = fechaDef;
+document.getElementById('txt-ciudad').textContent = fechaDef;
+
+// Primera fila al cargar
+agregarFila();
+</script>
+</body>
+</html>

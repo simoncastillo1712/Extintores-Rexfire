@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block contenido %}
+<style>
+.cert-header { background:linear-gradient(135deg,#198754 0%,#0f5132 100%); border-radius:16px; padding:20px 24px; color:#fff; margin-bottom:24px; }
+.cert-header h4 { font-size:1.3rem; font-weight:700; margin:0; }
+.cert-header p  { margin:4px 0 0; opacity:.85; font-size:.9rem; }
+.cert-card { border:none; border-radius:16px; box-shadow:0 2px 16px rgba(0,0,0,.1); overflow:hidden; transition:box-shadow .2s; text-decoration:none; display:block; }
+.cert-card:hover { box-shadow:0 4px 24px rgba(0,0,0,.16); text-decoration:none; }
+.cert-card:active { box-shadow:0 1px 6px rgba(0,0,0,.1); }
+.cert-icon-wrap { display:flex; align-items:center; justify-content:center; height:120px; }
+.cert-body { padding:16px 20px 20px; }
+.cert-nombre { font-weight:700; font-size:1rem; color:#212529; margin-bottom:4px; }
+.cert-desc { font-size:.82rem; color:#6c757d; line-height:1.4; margin-bottom:14px; }
+.btn-cert { width:100%; border-radius:10px; padding:11px; font-weight:700; font-size:.9rem; border:none; display:flex; align-items:center; justify-content:center; gap:8px; }
+</style>
+
+<div class="cert-header">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h4><i class="bi bi-patch-check-fill me-2"></i>Certificados REXFIRE</h4>
+            <p>Genera certificados según Norma Chilena 1180-2008</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <div class="col-12 col-sm-6">
+        <a href="{% url 'certificado_recarga' %}" class="cert-card card">
+            <div class="cert-icon-wrap" style="background:linear-gradient(135deg,#fff3cd,#fef9ee);">
+                <i class="bi bi-arrow-repeat" style="font-size:3.5rem;color:#fd7e14;opacity:.8;"></i>
+            </div>
+            <div class="cert-body">
+                <p class="cert-nombre">Certificado de Recarga</p>
+                <p class="cert-desc">
+                    Certifica que los extintores han sido recargados y mantenidos
+                    según la Norma Chilena 1180-2008. Incluye N° de serie, tipo,
+                    clase, peso y fecha de vencimiento de carga.
+                </p>
+                <div class="btn-cert" style="background:#fd7e14;color:#fff;">
+                    <i class="bi bi-printer-fill"></i> Generar Certificado
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 col-sm-6">
+        <a href="{% url 'certificado_venta' %}" class="cert-card card">
+            <div class="cert-icon-wrap" style="background:linear-gradient(135deg,#d1e7dd,#edfaf3);">
+                <i class="bi bi-shield-check" style="font-size:3.5rem;color:#198754;opacity:.8;"></i>
+            </div>
+            <div class="cert-body">
+                <p class="cert-nombre">Certificado de Venta</p>
+                <p class="cert-desc">
+                    Certifica que los extintores vendidos están cargados y
+                    mantenidos. Incluye fecha de fabricación, fecha de vencimiento
+                    de prueba hidrostática y N° de serie.
+                </p>
+                <div class="btn-cert" style="background:#198754;color:#fff;">
+                    <i class="bi bi-printer-fill"></i> Generar Certificado
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
+{% endblock %}
