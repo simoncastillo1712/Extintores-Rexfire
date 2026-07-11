@@ -66,4 +66,9 @@ urlpatterns = [
     path('vendedores/editar/<int:id>/',        views.editar_vendedor,      name='editar_vendedor'),
     path('vendedores/eliminar/<int:id>/',      views.eliminar_vendedor,    name='eliminar_vendedor'),
     path('vendedores/comisiones/<int:id>/',    views.comisiones_vendedor,  name='comisiones_vendedor'),
+
+    # IMPRESORA DE ETIQUETAS
+    path('etiquetas/',                         views.impresora_etiquetas,  name='impresora_etiquetas'),
+    path('etiquetas/<int:pk>/imprimir/',       views.imprimir_etiqueta,    name='imprimir_etiqueta'),
+    path('etiquetas/ajuste/',                  views.ajuste_impresion,     name='ajuste_impresion'),
 ]

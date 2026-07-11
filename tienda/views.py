@@ -27,7 +27,7 @@ def _productos_venta_ordenados():
     qs = Producto.objects.select_related('id_categoria').all()
     return sorted(qs, key=sort_key)
 
-from .models import Categoria, Producto, Cliente, Proveedor, Venta, DetalleVenta, Boleta, Factura, Vendedor, VentaVendedor, ConversacionWhatsapp, ConversacionEstado
+from .models import Categoria, Producto, Cliente, Proveedor, Venta, DetalleVenta, Boleta, Factura, Vendedor, VentaVendedor, ConversacionWhatsapp, ConversacionEstado, EtiquetaProducto, ConfiguracionEtiqueta
 from .forms import CategoriaForm, ProductoForm, ClienteForm, ProveedorForm, VendedorForm, ClientePerfilForm
 
 #####################################
@@ -1501,3 +1501,81 @@ def webhook_whatsapp(request):
     twiml = MessagingResponse()
     twiml.message(respuesta_visible[:1600])
     return HttpResponse(str(twiml).encode('utf-8'), content_type='text/xml; charset=utf-8')
+
+
+#####################################
+#  IMPRESORA DE ETIQUETAS
+#####################################
+
+@login_required
+def impresora_etiquetas(request):
+    productos = Producto.objects.all().order_by('id_producto')
+    etiquetas = {e.producto_id: e for e in EtiquetaProducto.objects.all()}
+    items = []
+    for p in productos:
+        items.append({
+            'producto': p,
+            'etiqueta': etiquetas.get(p.id_producto),
+        })
+    return render(request, 'etiquetas/lista.html', {'items': items})
+
+
+@login_required
+def imprimir_etiqueta(request, pk):
+    etiqueta = get_object_or_404(EtiquetaProducto, pk=pk)
+    config = ConfiguracionEtiqueta.get()
+    tipo = request.GET.get('tipo', 'delantera')
+    archivo = etiqueta.archivo_delantera if tipo == 'delantera' else etiqueta.archivo_especificaciones
+    return render(request, 'etiquetas/imprimir.html', {
+        'etiqueta': etiqueta,
+        'archivo': archivo,
+        'tipo': tipo,
+        'config': config,
+    })
+
+
+@login_required
+def ajuste_impresion(request):
+    config = ConfiguracionEtiqueta.get()
+    productos = Producto.objects.all().order_by('id_producto')
+    etiquetas = {e.producto_id: e for e in EtiquetaProducto.objects.select_related('producto')}
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'config':
+            config.tipo_papel = request.POST.get('tipo_papel', 'carta')
+            config.ancho_mm = request.POST.get('ancho_mm', 216)
+            config.alto_mm = request.POST.get('alto_mm', 279)
+            config.orientacion = request.POST.get('orientacion', 'portrait')
+            config.save()
+            messages.success(request, 'Configuración de papel guardada.')
+
+        elif action == 'upload':
+            producto_id = request.POST.get('producto_id')
+            try:
+                producto = Producto.objects.get(pk=producto_id)
+            except Producto.DoesNotExist:
+                messages.error(request, 'Producto no encontrado.')
+                return redirect('ajuste_impresion')
+
+            etiqueta, _ = EtiquetaProducto.objects.get_or_create(producto=producto)
+            if 'archivo_delantera' in request.FILES:
+                etiqueta.archivo_delantera = request.FILES['archivo_delantera']
+            if 'archivo_especificaciones' in request.FILES:
+                etiqueta.archivo_especificaciones = request.FILES['archivo_especificaciones']
+            etiqueta.save()
+            messages.success(request, f'Etiquetas de {producto.nombre} actualizadas.')
+
+        return redirect('ajuste_impresion')
+
+    items = []
+    for p in productos:
+        items.append({'producto': p, 'etiqueta': etiquetas.get(p.id_producto)})
+
+    return render(request, 'etiquetas/ajuste.html', {
+        'items': items,
+        'config': config,
+        'TIPOS_PAPEL': ConfiguracionEtiqueta.TIPOS_PAPEL,
+        'ORIENTACIONES': ConfiguracionEtiqueta.ORIENTACIONES,
+    })

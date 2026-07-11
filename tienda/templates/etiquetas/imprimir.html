@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Imprimir — {{ etiqueta.producto.nombre }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #f0f0f0; }
+
+        .toolbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: #212529; color: #fff;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 20px; gap: 12px;
+        }
+        .toolbar h6 { margin: 0; font-size: 0.95rem; }
+        .toolbar .btn-group { display: flex; gap: 8px; }
+        .toolbar button, .toolbar a {
+            padding: 6px 16px; border-radius: 6px; font-size: 0.85rem;
+            cursor: pointer; text-decoration: none; border: none;
+        }
+        .btn-print { background: #dc3545; color: #fff; }
+        .btn-back  { background: #6c757d; color: #fff; }
+
+        .pdf-wrapper {
+            margin-top: 56px;
+            height: calc(100vh - 56px);
+        }
+        iframe {
+            width: 100%; height: 100%; border: none;
+        }
+
+        @media print {
+            .toolbar { display: none !important; }
+            .pdf-wrapper { margin-top: 0; height: 100vh; }
+
+            @page {
+                size: {{ config.ancho_mm }}mm {{ config.alto_mm }}mm {{ config.orientacion }};
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <h6><i>🔥</i> {{ etiqueta.producto.nombre }} — {% if tipo == 'delantera' %}Etiqueta Delantera{% else %}Especificaciones{% endif %}</h6>
+    <div class="btn-group">
+        <a href="{% url 'impresora_etiquetas' %}" class="btn-back">← Volver</a>
+        <button class="btn-print" onclick="imprimirPDF()">🖨 Imprimir</button>
+    </div>
+</div>
+
+<div class="pdf-wrapper">
+    {% if archivo %}
+    <iframe id="pdf-frame" src="{{ archivo.url }}" title="Etiqueta PDF"></iframe>
+    {% else %}
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:1.2rem;color:#888;">
+        No hay PDF cargado para este tipo de etiqueta.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function imprimirPDF() {
+    var frame = document.getElementById('pdf-frame');
+    if (frame) {
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+    } else {
+        window.print();
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-gear-fill text-secondary me-2"></i>Ajuste Impresión</h4>
+    <a href="{% url 'impresora_etiquetas' %}" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-printer me-1"></i>Ir a Imprimir
+    </a>
+</div>
+
+<div class="row g-4">
+
+    <!-- Configuración de papel -->
+    <div class="col-12 col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark text-white fw-semibold">
+                <i class="bi bi-file-earmark me-2"></i>Configuración de Papel
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="config">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tipo de papel</label>
+                        <select name="tipo_papel" id="tipo_papel" class="form-select" onchange="actualizarDimensiones(this.value)">
+                            {% for val, label in TIPOS_PAPEL %}
+                            <option value="{{ val }}" {% if config.tipo_papel == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3" id="dimensiones-custom" style="{% if config.tipo_papel != 'personalizado' %}display:none{% endif %}">
+                        <div class="col-6">
+                            <label class="form-label">Ancho (mm)</label>
+                            <input type="number" name="ancho_mm" class="form-control" value="{{ config.ancho_mm }}" step="0.1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Alto (mm)</label>
+                            <input type="number" name="alto_mm" class="form-control" value="{{ config.alto_mm }}" step="0.1">
+                        </div>
+                    </div>
+                    <input type="hidden" name="ancho_mm" id="ancho_hidden" value="{{ config.ancho_mm }}">
+                    <input type="hidden" name="alto_mm" id="alto_hidden" value="{{ config.alto_mm }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Orientación</label>
+                        <select name="orientacion" class="form-select">
+                            {% for val, label in ORIENTACIONES %}
+                            <option value="{{ val }}" {% if config.orientacion == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100">
+                        <i class="bi bi-save me-1"></i>Guardar configuración
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subir etiquetas por producto -->
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-danger text-white fw-semibold">
+                <i class="bi bi-upload me-2"></i>Cargar / Actualizar PDFs
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Delantera</th>
+                                <th>Especificaciones</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td class="fw-semibold">{{ item.producto.nombre }}</td>
+                            <td>
+                                {% if item.etiqueta and item.etiqueta.archivo_delantera %}
+                                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Cargada</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Sin PDF</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.etiqueta and item.etiqueta.archivo_especificaciones %}
+                                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Cargada</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Sin PDF</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-outline-danger btn-sm"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#upload-{{ item.producto.id_producto }}">
+                                    <i class="bi bi-upload"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="collapse" id="upload-{{ item.producto.id_producto }}">
+                            <td colspan="4" class="bg-light py-3 px-4">
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="upload">
+                                    <input type="hidden" name="producto_id" value="{{ item.producto.id_producto }}">
+                                    <div class="row g-3">
+                                        <div class="col-12 col-sm-6">
+                                            <label class="form-label small fw-semibold">PDF Etiqueta Delantera</label>
+                                            <input type="file" name="archivo_delantera" class="form-control form-control-sm" accept=".pdf">
+                                        </div>
+                                        <div class="col-12 col-sm-6">
+                                            <label class="form-label small fw-semibold">PDF Especificaciones</label>
+                                            <input type="file" name="archivo_especificaciones" class="form-control form-control-sm" accept=".pdf">
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="bi bi-cloud-upload me-1"></i>Subir PDFs
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const DIMENSIONES = {
+    'carta':  [216, 279],
+    'a4':     [210, 297],
+    'oficio': [216, 330],
+    'personalizado': [null, null],
+};
+
+function actualizarDimensiones(tipo) {
+    const custom = document.getElementById('dimensiones-custom');
+    const anchoH = document.getElementById('ancho_hidden');
+    const altoH  = document.getElementById('alto_hidden');
+    const dims = DIMENSIONES[tipo];
+
+    if (tipo === 'personalizado') {
+        custom.style.display = '';
+    } else {
+        custom.style.display = 'none';
+        anchoH.value = dims[0];
+        altoH.value  = dims[1];
+    }
+}
+</script>
+{% endblock %}

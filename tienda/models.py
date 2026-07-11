@@ -253,3 +253,48 @@ class VentaVendedor(models.Model):
 
     def __str__(self):
         return f'Venta {self.id_venta_id}'
+
+
+class EtiquetaProducto(models.Model):
+    producto = models.OneToOneField(
+        Producto, on_delete=models.CASCADE,
+        db_column='id_producto', related_name='etiqueta',
+    )
+    archivo_delantera = models.FileField(upload_to='etiquetas/', blank=True, null=True)
+    archivo_especificaciones = models.FileField(upload_to='etiquetas/', blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'etiqueta_producto'
+
+    def __str__(self):
+        return f'Etiqueta {self.producto.nombre}'
+
+
+class ConfiguracionEtiqueta(models.Model):
+    TIPOS_PAPEL = [
+        ('carta',        'Carta (216×279 mm)'),
+        ('a4',           'A4 (210×297 mm)'),
+        ('oficio',       'Oficio (216×330 mm)'),
+        ('personalizado','Personalizado'),
+    ]
+    ORIENTACIONES = [
+        ('portrait',  'Vertical'),
+        ('landscape', 'Horizontal'),
+    ]
+    tipo_papel   = models.CharField(max_length=15, choices=TIPOS_PAPEL, default='carta')
+    ancho_mm     = models.DecimalField(max_digits=7, decimal_places=2, default=216)
+    alto_mm      = models.DecimalField(max_digits=7, decimal_places=2, default=279)
+    orientacion  = models.CharField(max_length=10, choices=ORIENTACIONES, default='portrait')
+
+    class Meta:
+        db_table = 'configuracion_etiqueta'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

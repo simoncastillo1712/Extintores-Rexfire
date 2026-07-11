@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-printer-fill text-danger me-2"></i>Impresora de Etiquetas</h4>
+    <a href="{% url 'ajuste_impresion' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-gear me-1"></i>Ajuste Impresión
+    </a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+{% for item in items %}
+<div class="col">
+    <div class="card h-100 shadow-sm border-0">
+        {% if item.producto.imagen %}
+        <img src="{{ item.producto.imagen.url }}" class="card-img-top p-3" style="height:160px;object-fit:contain;" alt="{{ item.producto.nombre }}">
+        {% else %}
+        <div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;">
+            <i class="bi bi-fire text-danger" style="font-size:3rem;"></i>
+        </div>
+        {% endif %}
+        <div class="card-body">
+            <h6 class="card-title fw-semibold">{{ item.producto.nombre }}</h6>
+            {% if item.etiqueta %}
+            <div class="d-grid gap-2">
+                {% if item.etiqueta.archivo_delantera %}
+                <a href="{% url 'imprimir_etiqueta' item.etiqueta.pk %}?tipo=delantera"
+                   class="btn btn-danger btn-sm" target="_blank">
+                    <i class="bi bi-printer me-1"></i>Etiqueta Delantera
+                </a>
+                {% endif %}
+                {% if item.etiqueta.archivo_especificaciones %}
+                <a href="{% url 'imprimir_etiqueta' item.etiqueta.pk %}?tipo=especificaciones"
+                   class="btn btn-outline-danger btn-sm" target="_blank">
+                    <i class="bi bi-printer me-1"></i>Especificaciones
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0"><i class="bi bi-exclamation-circle me-1"></i>Sin etiquetas cargadas</p>
+            {% endif %}
+        </div>
+        {% if item.etiqueta %}
+        <div class="card-footer bg-transparent border-0">
+            <small class="text-muted">Actualizado: {{ item.etiqueta.updated_at|date:"d/m/Y" }}</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+</div>
+{% endblock %}
