@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models.deletion import RestrictedError
 from django.db import IntegrityError
+from django.conf import settings
 from urllib.parse import urlencode
 import json
 import re
