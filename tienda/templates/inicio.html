@@ -1,140 +1,240 @@
 {% extends 'base.html' %}
 {% load static rexfire_filters %}
 {% block contenido %}
+<style>
+/* ── CTAs rápidos ── */
+.cta-btn {
+    flex: 1; border-radius: 14px; padding: 14px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    font-weight: 700; font-size: .82rem; text-decoration: none;
+    transition: opacity .15s;
+}
+.cta-btn i { font-size: 1.5rem; }
+.cta-btn:active { opacity: .82; text-decoration: none; }
 
-<!-- Banner hero -->
-<div class="hero-banner text-center p-3 mb-4">
-  <h1 class="fw-bold text-white">Bienvenido a Extintores Rexfire</h1>
-  <p class="mb-4">Extintores certificados CESMEC. Protege tu negocio, hogar y vehículo.</p>
-  <a href="{% url 'listar_productos' %}" class="btn btn-success btn-lg px-4">Ver Productos</a>
+/* ── Highlights ── */
+.hl-card {
+    border: none; border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.07);
+    padding: 14px 10px; text-align: center; background: #fff;
+}
+.hl-card i { font-size: 1.6rem; }
+.hl-titulo { font-weight: 700; font-size: .78rem; color: #212529; margin-top: 6px; }
+.hl-sub    { font-size: .68rem; color: #6c757d; margin-top: 1px; }
+
+/* ── Delivery ── */
+.delivery-card {
+    background: linear-gradient(135deg, #fff7cc 0%, #fff0a0 100%);
+    border-radius: 16px; padding: 16px 18px; margin-bottom: 24px;
+}
+.delivery-title { font-weight: 700; font-size: 1rem; color: #5c4400; margin-bottom: 10px; }
+.delivery-items { display: flex; flex-direction: column; gap: 8px; }
+.delivery-item {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,.55); border-radius: 10px; padding: 9px 12px;
+}
+.delivery-item i { font-size: 1.2rem; color: #856404; flex-shrink: 0; }
+.delivery-item-text { font-size: .82rem; color: #5c4400; line-height: 1.4; }
+.delivery-item-text strong { display: block; font-size: .9rem; }
+
+/* ── Productos destacados ── */
+.sec-title {
+    font-weight: 700; font-size: 1rem; color: #212529;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.prod-home-card {
+    border: none; border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden; background: #fff; height: 100%;
+}
+.prod-home-img {
+    background: #f8f9fa; display: flex;
+    align-items: center; justify-content: center; height: 130px;
+}
+.prod-home-img img { max-height: 110px; max-width: 90%; object-fit: contain; padding: 8px; }
+.prod-home-body { padding: 10px 12px 14px; }
+.prod-home-nombre { font-weight: 700; font-size: .85rem; color: #212529; margin-bottom: 3px; line-height: 1.3; }
+.prod-home-precio { font-weight: 700; font-size: .95rem; color: #dc3545; margin-bottom: 8px; }
+.prod-home-precio small { font-size: .7rem; color: #6c757d; font-weight: 400; }
+.btn-comprar-home {
+    width: 100%; background: #198754; color: #fff;
+    border: none; border-radius: 9px; padding: 9px;
+    font-weight: 700; font-size: .82rem;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.btn-comprar-home:active { opacity: .85; }
+
+/* ── Categorías ── */
+.cat-card {
+    border-radius: 16px; padding: 16px 14px;
+    height: 100%; display: flex; flex-direction: column; justify-content: space-between;
+    text-decoration: none; transition: opacity .15s;
+}
+.cat-card:active { opacity: .85; text-decoration: none; }
+.cat-card i  { font-size: 2rem; margin-bottom: 8px; display: block; }
+.cat-card h6 { font-weight: 700; font-size: .88rem; margin-bottom: 4px; }
+.cat-card p  { font-size: .75rem; margin: 0; opacity: .85; line-height: 1.4; }
+.cat-card-badge {
+    display: inline-block; font-size: .68rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; margin-top: 10px;
+    background: rgba(255,255,255,.3);
+}
+.cat-red    { background: linear-gradient(135deg, #dc3545, #a71d2a); color: #fff; }
+.cat-blue   { background: linear-gradient(135deg, #0d6efd, #0a3d8f); color: #fff; }
+.cat-teal   { background: linear-gradient(135deg, #20c997, #0f7a5a); color: #fff; }
+.cat-dark   { background: linear-gradient(135deg, #343a40, #212529); color: #fff; }
+</style>
+
+<!-- ── CTAs rápidos ── -->
+<div class="d-flex gap-2 mb-4">
+    <a href="{% url 'listar_productos' %}" class="cta-btn" style="background:#dc3545;color:#fff;">
+        <i class="bi bi-fire"></i> Productos
+    </a>
+    <a href="{% url 'listar_servicios' %}" class="cta-btn" style="background:#fff;color:#dc3545;border:2px solid #dc3545;">
+        <i class="bi bi-wrench-adjustable-circle"></i> Servicios
+    </a>
+    <a href="https://wa.me/56975555423" target="_blank" class="cta-btn" style="background:#25D366;color:#fff;">
+        <i class="bi bi-whatsapp"></i> WhatsApp
+    </a>
 </div>
 
-<!-- Banner Delivery -->
-<div class="delivery-wrapper text-center mb-4">
-  <section class="delivery-banner">
-    <div class="delivery-banner__content">
-      <div>
-        <h2 class="fw-bold mb-1">🚚 Despacho a todo Santiago</h2>
-        <p class="mb-0">Recibe tus extintores directamente en tu domicilio o negocio.</p>
-      </div>
-      <div class="delivery-banner__discounts">
-        <div class="discount-item">
-          <span>Compras sobre</span>
-          <strong>$300.000</strong>
-          <small>Despacho sin costo</small>
+<!-- ── Highlights ── -->
+<div class="row g-2 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="hl-card">
+            <i class="bi bi-patch-check-fill text-danger"></i>
+            <div class="hl-titulo">Cert. CESMEC</div>
+            <div class="hl-sub">Calidad garantizada</div>
         </div>
-        <div class="discount-item">
-          <span>Entre $50.000</span>
-          <strong>y $300.000</strong>
-          <small>Despacho $6.800 + IVA</small>
-        </div>
-        <div class="discount-item">
-          <span>Pago:</span>
-          <strong>Efectivo / Transferencia</strong>
-          <small>Tarjeta con +1.5%</small>
-        </div>
-      </div>
     </div>
-  </section>
+    <div class="col-6 col-md-3">
+        <div class="hl-card">
+            <i class="bi bi-truck text-primary"></i>
+            <div class="hl-titulo">Despacho</div>
+            <div class="hl-sub">A todo Santiago</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="hl-card">
+            <i class="bi bi-shield-check text-success"></i>
+            <div class="hl-titulo">Garantía</div>
+            <div class="hl-sub">1 año de operatividad</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="hl-card">
+            <i class="bi bi-arrow-repeat" style="color:#fd7e14;"></i>
+            <div class="hl-titulo">Recarga</div>
+            <div class="hl-sub">Desde $4.000 + IVA</div>
+        </div>
+    </div>
 </div>
 
-<!-- Productos destacados -->
-<section class="my-5 text-center mb-4">
-  <h2 class="mb-4 fw-semibold">Productos Destacados</h2>
-  <div class="row">
+<!-- ── Delivery ── -->
+<div class="delivery-card mb-4">
+    <div class="delivery-title"><i class="bi bi-truck-front-fill me-2"></i>Despacho a domicilio — Santiago</div>
+    <div class="delivery-items">
+        <div class="delivery-item">
+            <i class="bi bi-gift-fill"></i>
+            <div class="delivery-item-text">
+                <strong>Compras sobre $300.000</strong>
+                Despacho sin costo
+            </div>
+        </div>
+        <div class="delivery-item">
+            <i class="bi bi-box-seam"></i>
+            <div class="delivery-item-text">
+                <strong>Entre $50.000 y $300.000</strong>
+                Despacho $6.800 + IVA
+            </div>
+        </div>
+        <div class="delivery-item">
+            <i class="bi bi-credit-card"></i>
+            <div class="delivery-item-text">
+                <strong>Efectivo / Transferencia</strong>
+                Tarjeta con +1.5%
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Productos destacados ── -->
+<p class="sec-title"><i class="bi bi-star-fill text-warning"></i> Productos Destacados</p>
+<div class="row g-3 mb-4">
     {% for producto in productos_destacados %}
-    <div class="col-md-3 mb-4">
-      <div class="card h-100 producto-card"
-           data-id="{{ producto.id_producto }}"
-           data-nombre="{{ producto.nombre }}"
-           data-precio="{{ producto.precio }}"
-           data-stock="{{ producto.stock }}"
-           data-descripcion="{{ producto.descripcion|default:'' }}"
-           data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
-        {% if producto.imagen %}
-          <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
-        {% else %}
-          <div class="card-img-placeholder d-flex align-items-center justify-content-center bg-light">
-            <i class="bi bi-fire text-danger" style="font-size:3rem;"></i>
-          </div>
-        {% endif %}
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title fw-bold mb-1">{{ producto.nombre }}</h5>
-          <p class="card-text text-primary fw-semibold mb-1">${{ producto.precio|clp }} <small class="text-muted fw-normal">+ IVA</small></p>
-          {% if producto.descripcion %}
-          <p class="card-text text-muted mb-2" style="font-size:0.8rem;">{{ producto.descripcion|truncatechars:55 }}</p>
-          {% endif %}
-          <button type="button" class="btn btn-primary btn-sm mt-auto btn-comprar">
-            <i class="bi bi-cart-plus"></i> Comprar
-          </button>
+    <div class="col-6 col-md-3">
+        <div class="prod-home-card producto-card"
+             data-id="{{ producto.id_producto }}"
+             data-nombre="{{ producto.nombre }}"
+             data-precio="{{ producto.precio }}"
+             data-stock="{{ producto.stock }}"
+             data-descripcion="{{ producto.descripcion|default:'' }}"
+             data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
+            <div class="prod-home-img">
+                {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+                {% else %}
+                <i class="bi bi-fire text-danger" style="font-size:2.5rem;opacity:.3;"></i>
+                {% endif %}
+            </div>
+            <div class="prod-home-body">
+                <div class="prod-home-nombre">{{ producto.nombre }}</div>
+                <div class="prod-home-precio">${{ producto.precio|clp }} <small>+ IVA</small></div>
+                <button type="button" class="btn-comprar-home btn-comprar">
+                    <i class="bi bi-cart-plus"></i> Agregar
+                </button>
+            </div>
         </div>
-      </div>
     </div>
     {% endfor %}
-  </div>
-</section>
+</div>
 
-<!-- Categorías -->
-<section class="my-5 text-center mb-4">
-  <h2 class="mb-4 fw-semibold">Categorías</h2>
-  <div class="d-flex flex-wrap gap-2 mb-3">
-    {% for categoria in categorias %}
-      <a href="{% url 'listar_productos' %}?q={{ categoria.nombre|urlencode }}" class="btn btn-outline-secondary">{{ categoria.nombre }}</a>
-    {% endfor %}
-  </div>
+<!-- ── Categorías ── -->
+<p class="sec-title"><i class="bi bi-grid-fill text-secondary"></i> Nuestras Categorías</p>
+<div class="row g-3 mb-4">
+    <div class="col-6">
+        <a href="{% url 'listar_productos' %}?q=PQS" class="cat-card cat-red">
+            <div>
+                <i class="bi bi-fire"></i>
+                <h6>PQS Polvo Químico Seco</h6>
+                <p>Fuegos Clase A-B-C. Hogares, vehículos e industrias.</p>
+            </div>
+            <span class="cat-card-badge">El más versátil</span>
+        </a>
+    </div>
+    <div class="col-6">
+        <a href="{% url 'listar_productos' %}?q=CO2" class="cat-card cat-blue">
+            <div>
+                <i class="bi bi-lightning-charge-fill"></i>
+                <h6>CO2 Dióxido de Carbono</h6>
+                <p>Para equipos eléctricos y electrónicos. Sin residuo.</p>
+            </div>
+            <span class="cat-card-badge">Sin residuo</span>
+        </a>
+    </div>
+    <div class="col-6">
+        <a href="{% url 'listar_servicios' %}" class="cat-card cat-teal">
+            <div>
+                <i class="bi bi-arrow-repeat"></i>
+                <h6>Recargas y Recambio</h6>
+                <p>Mantén tu extintor operativo. Servicio certificado.</p>
+            </div>
+            <span class="cat-card-badge">Desde $4.000</span>
+        </a>
+    </div>
+    <div class="col-6">
+        <a href="{% url 'listar_productos' %}" class="cat-card cat-dark">
+            <div>
+                <i class="bi bi-patch-check-fill"></i>
+                <h6>Certificado CESMEC</h6>
+                <p>Todos nuestros productos cuentan con certificación oficial.</p>
+            </div>
+            <span class="cat-card-badge">Garantía total</span>
+        </a>
+    </div>
+</div>
 
-  <form method="get" action="{% url 'inicio' %}" class="categoria-search-form">
-    <div class="input-group">
-      <span class="input-group-text">
-        <i class="bi bi-search"></i>
-      </span>
-      <input
-        type="text"
-        name="cat_q"
-        value="{{ cat_q }}"
-        class="form-control"
-        placeholder="Buscar categoría en inicio..."
-      >
-      <button type="submit" class="btn btn-primary">Buscar</button>
-    </div>
-  </form>
-</section>
-
-<!-- Categorías -->
-<section class="my-5 text-center mb-4">
-  <h2 class="mb-4 fw-semibold">Nuestras Categorías</h2>
-  <div class="row g-3 promo-grid">
-    <div class="col-md-6 col-lg-3">
-      <article class="promo-card promo-card--red h-100">
-        <h5 class="mb-2">PQS Polvo Químico Seco</h5>
-        <p class="mb-2">Para fuegos Clase A-B-C en hogares, vehículos e industrias.</p>
-        <strong>El más versátil</strong>
-      </article>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <article class="promo-card promo-card--orange h-100">
-        <h5 class="mb-2">CO2 Dióxido de Carbono</h5>
-        <p class="mb-2">Para equipos eléctricos y electrónicos. No daña los equipos.</p>
-        <strong>Sin residuo</strong>
-      </article>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <article class="promo-card promo-card--dark h-100">
-        <h5 class="mb-2">Recargas y Recambio</h5>
-        <p class="mb-2">Servicio de recarga para mantener tu extintor operativo.</p>
-        <strong>Desde $4.000 + IVA</strong>
-      </article>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <article class="promo-card promo-card--grey h-100">
-        <h5 class="mb-2">Certificado CESMEC</h5>
-        <p class="mb-2">Todos nuestros extintores cuentan con certificación oficial.</p>
-        <strong>Garantía de calidad</strong>
-      </article>
-    </div>
-  </div>
-</section>
-
+<!-- Modal producto (igual que otras páginas) -->
 <div id="productoModal" class="producto-modal-overlay" aria-hidden="true">
   <div class="producto-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductoNombre">
     <button type="button" class="producto-modal-close" id="cerrarModalBtn" aria-label="Cerrar modal">&times;</button>
@@ -152,8 +252,7 @@
           <div id="modalProductoEspecificaciones" class="mb-3"></div>
           <div id="modalProductoRecomendado" class="modal-recomendado mb-3"></div>
           <label for="cantidadProducto" class="form-label fw-semibold" style="font-size:0.88rem;">Cantidad</label>
-          <input type="number" id="cantidadProducto" class="form-control form-control-sm mb-3"
-                 value="1" min="1" style="width:100px;">
+          <input type="number" id="cantidadProducto" class="form-control form-control-sm mb-3" value="1" min="1" style="width:100px;">
           <div class="d-flex flex-wrap gap-2">
             <button type="button" id="agregarCarritoBtn" class="btn btn-success btn-sm">
               <i class="bi bi-cart-plus"></i> Agregar al carrito
