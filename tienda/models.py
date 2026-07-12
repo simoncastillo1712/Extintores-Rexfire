@@ -281,6 +281,7 @@ class ConfiguracionEtiqueta(models.Model):
     ORIENTACIONES = [
         ('portrait',  'Vertical'),
         ('landscape', 'Horizontal'),
+        ('auto',      'Usar orientación del documento'),
     ]
     tipo_papel   = models.CharField(max_length=15, choices=TIPOS_PAPEL, default='carta')
     ancho_mm     = models.DecimalField(max_digits=7, decimal_places=2, default=216)

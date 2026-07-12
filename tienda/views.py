@@ -1543,15 +1543,23 @@ def impresora_etiquetas(request):
         {'kg': '50KG', 'nombre': 'Extintor 50KG PQS', 'etiq': '50KG.pdf', 'img': 'img/extintor50kg.png'},
     ]
 
+    etiquetas_db = {
+        e.producto.nombre: e
+        for e in EtiquetaProducto.objects.select_related('producto').all()
+    }
+
     modelos = []
     for m in MODELOS_DEF:
         spec_file = next((n for n in SPEC_CANDIDATES[m['kg']] if n in doc_files), None)
+        etiq_db = etiquetas_db.get(m['nombre'])
+        etiq_url = (etiq_db.archivo_delantera.url if etiq_db and etiq_db.archivo_delantera else None) or doc_url(m['etiq'])
+        spec_url = (etiq_db.archivo_especificaciones.url if etiq_db and etiq_db.archivo_especificaciones else None) or (f"{base}docs/{spec_file}" if spec_file else None)
         modelos.append({
             'kg':       m['kg'],
             'nombre':   m['nombre'],
             'img_url':  f"{base}{m['img']}",
-            'etiq_url': doc_url(m['etiq']),
-            'spec_url': f"{base}docs/{spec_file}" if spec_file else None,
+            'etiq_url': etiq_url,
+            'spec_url': spec_url,
         })
 
     STANDALONE_DEF = [
@@ -1584,13 +1592,19 @@ def imprimir_etiqueta(request, pk):
 
 @login_required
 def ajuste_impresion(request):
+    from pathlib import Path
+
     config = ConfiguracionEtiqueta.get()
-    _CATS = ['PQS (Polvo Químico Seco)', 'CO2 (Dióxido de Carbono)']
-    productos = Producto.objects.filter(
-        Q(id_categoria__nombre__in=_CATS) |
-        Q(id_categoria__nombre='Accesorios', nombre__icontains='señal')
-    ).select_related('id_categoria').order_by('id_categoria__nombre', 'id_producto')
-    etiquetas = {e.producto_id: e for e in EtiquetaProducto.objects.select_related('producto')}
+
+    _MODELOS_KG = [
+        {'kg': '1KG',  'nombre': 'Extintor 1KG PQS',  'img': 'img/extintor1kg.webp'},
+        {'kg': '2KG',  'nombre': 'Extintor 2KG PQS',  'img': 'img/extintor2kg.webp'},
+        {'kg': '4KG',  'nombre': 'Extintor 4KG PQS',  'img': 'img/extintor4kg.webp'},
+        {'kg': '6KG',  'nombre': 'Extintor 6KG PQS',  'img': 'img/extintor6kg.webp'},
+        {'kg': '10KG', 'nombre': 'Extintor 10KG PQS', 'img': 'img/extintor10kg.webp'},
+        {'kg': '25KG', 'nombre': 'Extintor 25KG PQS', 'img': 'img/extintor25kg.webp'},
+        {'kg': '50KG', 'nombre': 'Extintor 50KG PQS', 'img': 'img/extintor50kg.png'},
+    ]
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1604,31 +1618,66 @@ def ajuste_impresion(request):
             messages.success(request, 'Configuración de papel guardada.')
 
         elif action == 'upload':
-            producto_id = request.POST.get('producto_id')
+            nombre_producto = request.POST.get('nombre_producto')
             try:
-                producto = Producto.objects.get(pk=producto_id)
+                producto = Producto.objects.get(nombre=nombre_producto)
             except Producto.DoesNotExist:
                 messages.error(request, 'Producto no encontrado.')
                 return redirect('ajuste_impresion')
 
             etiqueta, _ = EtiquetaProducto.objects.get_or_create(producto=producto)
-            if 'archivo_delantera' in request.FILES:
-                etiqueta.archivo_delantera = request.FILES['archivo_delantera']
+            if 'archivo_etiqueta' in request.FILES:
+                etiqueta.archivo_delantera = request.FILES['archivo_etiqueta']
             if 'archivo_especificaciones' in request.FILES:
                 etiqueta.archivo_especificaciones = request.FILES['archivo_especificaciones']
             etiqueta.save()
-            messages.success(request, f'Etiquetas de {producto.nombre} actualizadas.')
+            messages.success(request, f'PDFs de {producto.nombre} actualizados.')
 
         return redirect('ajuste_impresion')
 
+    base = settings.STATIC_URL
+    etiquetas_db = {
+        e.producto.nombre: e
+        for e in EtiquetaProducto.objects.select_related('producto').all()
+    }
+
+    docs_dir = Path(settings.BASE_DIR) / 'tienda' / 'static' / 'docs'
+    try:
+        doc_files = {f.name for f in docs_dir.iterdir() if f.is_file()}
+    except FileNotFoundError:
+        doc_files = set()
+
+    SPEC_CANDIDATES = {
+        '1KG':  ['Especificaciones1KG.pdf',  'Especificaciones 1KG.pdf'],
+        '2KG':  ['Especificaciones 2KG.pdf', 'Especificaciones2KG.pdf'],
+        '4KG':  ['Especificaciones 4KG.pdf', 'Especificaciones4KG.pdf'],
+        '6KG':  ['Especificaciones 6KG.pdf', 'Especificaciones6KG.pdf'],
+        '10KG': ['Especificaciones 10KG.pdf', 'Especificaciones10KG.pdf'],
+        '25KG': ['Especificaciones 25KG.pdf', 'Especificaciones25KG.pdf'],
+        '50KG': ['Especificaciones 50KG.pdf', 'Especificaciones50KG.pdf'],
+    }
+
     items = []
-    for p in productos:
-        items.append({'producto': p, 'etiqueta': etiquetas.get(p.id_producto)})
+    for m in _MODELOS_KG:
+        etiq_db = etiquetas_db.get(m['nombre'])
+        spec_static = next((n for n in SPEC_CANDIDATES[m['kg']] if n in doc_files), None)
+        items.append({
+            'kg':       m['kg'],
+            'nombre':   m['nombre'],
+            'img_url':  f"{base}{m['img']}",
+            'etiq_db':  etiq_db.archivo_delantera if etiq_db and etiq_db.archivo_delantera else None,
+            'spec_db':  etiq_db.archivo_especificaciones if etiq_db and etiq_db.archivo_especificaciones else None,
+            'etiq_static': m['kg'].replace(' ', '') + '.pdf' in doc_files or any(
+                f"{m['kg']}.pdf" == f or f"{m['kg'].replace('KG',' KG')}.pdf" == f
+                for f in doc_files
+            ),
+            'spec_static': spec_static is not None,
+        })
 
     return render(request, 'etiquetas/ajuste.html', {
-        'items': items,
-        'config': config,
-        'TIPOS_PAPEL': ConfiguracionEtiqueta.TIPOS_PAPEL,
+        'items':        items,
+        'config':       config,
+        'TIPOS_PAPEL':  ConfiguracionEtiqueta.TIPOS_PAPEL,
         'ORIENTACIONES': ConfiguracionEtiqueta.ORIENTACIONES,
     })
 

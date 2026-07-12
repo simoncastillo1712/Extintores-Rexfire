@@ -1,156 +1,110 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block contenido %}
 <style>
-    .ajuste-header {
-        background: linear-gradient(135deg, #343a40 0%, #212529 100%);
-        border-radius: 16px;
-        padding: 20px 24px;
-        color: white;
-        margin-bottom: 24px;
-    }
-    .ajuste-header h4 { font-size: 1.25rem; font-weight: 700; margin: 0; }
-    .ajuste-header p  { margin: 4px 0 0; opacity: .75; font-size: .88rem; }
+.ajuste-header {
+    background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+    border-radius: 16px; padding: 20px 24px; color: white; margin-bottom: 24px;
+}
+.ajuste-header h4 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.ajuste-header p  { margin: 4px 0 0; opacity: .75; font-size: .88rem; }
 
-    .section-title {
-        font-size: .7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        color: #6c757d;
-        margin-bottom: 12px;
-    }
+.section-label {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .09em; color: #6c757d; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+}
 
-    /* Paper config card */
-    .config-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 2px 12px rgba(0,0,0,.08);
-        overflow: hidden;
-    }
-    .config-card .card-header {
-        background: #212529;
-        color: white;
-        font-weight: 700;
-        font-size: .9rem;
-        padding: 14px 20px;
-        border: none;
-    }
-    .config-card .card-body { padding: 20px; }
+/* Config card */
+.config-card { border:none; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.08); overflow:hidden; margin-bottom:24px; }
+.config-card .card-header { background:#212529; color:#fff; font-weight:700; font-size:.9rem; padding:14px 20px; border:none; }
+.config-card .card-body   { padding:20px; }
 
-    /* Producto upload cards */
-    .prod-card {
-        border: 1.5px solid #e9ecef;
-        border-radius: 14px;
-        overflow: hidden;
-        background: #fff;
-        transition: border-color .2s;
-    }
-    .prod-card.has-pdfs { border-color: #c3e6cb; }
+/* Orientation radio */
+.orient-group { display:flex; gap:8px; flex-wrap:wrap; }
+.orient-opt {
+    flex:1; min-width:120px; text-align:center;
+    border:1.5px solid #dee2e6; border-radius:10px;
+    padding:10px 8px; cursor:pointer;
+    font-size:.83rem; transition:border-color .15s, background .15s;
+}
+.orient-opt input { display:none; }
+.orient-opt.active { border-color:#212529; background:#f8f9fa; font-weight:700; }
+.orient-opt .orient-icon { font-size:1.4rem; display:block; margin-bottom:4px; }
 
-    .prod-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 16px;
-        cursor: pointer;
-        user-select: none;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .prod-img {
-        width: 48px; height: 48px;
-        object-fit: contain;
-        border-radius: 8px;
-        background: #f8f9fa;
-        flex-shrink: 0;
-    }
-    .prod-img-placeholder {
-        width: 48px; height: 48px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.4rem; flex-shrink: 0;
-    }
-    .prod-info { flex: 1; min-width: 0; }
-    .prod-nombre { font-weight: 700; font-size: .92rem; color: #212529; }
-    .prod-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
-    .pdf-badge {
-        font-size: .7rem; font-weight: 600; padding: 2px 8px;
-        border-radius: 20px; white-space: nowrap;
-    }
-    .pdf-badge.ok  { background: #d1e7dd; color: #0a3622; }
-    .pdf-badge.no  { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
-    .prod-toggle {
-        color: #adb5bd; font-size: 1.1rem;
-        transition: transform .2s;
-        flex-shrink: 0;
-    }
-    .prod-header[aria-expanded="true"] .prod-toggle {
-        transform: rotate(180deg);
-    }
+.btn-guardar {
+    background:#212529; color:#fff; border:none; border-radius:10px;
+    padding:12px 20px; font-weight:700; font-size:.95rem; width:100%;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+}
 
-    .upload-panel {
-        padding: 0 16px 16px;
-        border-top: 1px solid #f0f0f0;
-    }
-    .upload-zone {
-        border: 2px dashed #dee2e6;
-        border-radius: 10px;
-        padding: 14px;
-        text-align: center;
-        background: #f8f9fa;
-        cursor: pointer;
-        transition: border-color .2s;
-    }
-    .upload-zone:hover, .upload-zone:focus-within { border-color: #dc3545; background: #fff5f5; }
-    .upload-zone label {
-        cursor: pointer;
-        font-size: .83rem;
-        color: #6c757d;
-        display: block;
-        margin: 0;
-    }
-    .upload-zone .upload-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
-    .upload-zone input[type="file"] { display: none; }
-    .upload-zone .file-name {
-        font-size: .78rem; color: #dc3545; font-weight: 600;
-        margin-top: 4px; word-break: break-all;
-    }
+/* KG product cards */
+.kg-card { border:1.5px solid #e9ecef; border-radius:14px; background:#fff; overflow:hidden; margin-bottom:10px; }
+.kg-card.has-upload { border-color:#c3e6cb; }
 
-    .btn-subir {
-        background: #dc3545; color: #fff;
-        border: none; border-radius: 10px;
-        padding: 10px 20px; font-weight: 700;
-        font-size: .9rem; width: 100%;
-        margin-top: 12px;
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-subir:active { opacity: .85; }
+.kg-header {
+    display:flex; align-items:center; gap:12px;
+    padding:13px 16px; cursor:pointer;
+    user-select:none; -webkit-tap-highlight-color:transparent;
+}
+.kg-img { width:48px; height:48px; object-fit:contain; border-radius:8px; background:#f8f9fa; flex-shrink:0; }
+.kg-info { flex:1; min-width:0; }
+.kg-nombre { font-weight:700; font-size:.9rem; color:#212529; }
+.kg-badges { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
+.pdf-badge {
+    font-size:.68rem; font-weight:600; padding:2px 8px;
+    border-radius:20px; white-space:nowrap;
+}
+.pdf-badge.ok-db   { background:#d1e7dd; color:#0a3622; }
+.pdf-badge.ok-stat { background:#cfe2ff; color:#084298; }
+.pdf-badge.none    { background:#f8f9fa; color:#6c757d; border:1px solid #dee2e6; }
 
-    .btn-guardar-config {
-        background: #212529; color: #fff;
-        border: none; border-radius: 10px;
-        padding: 12px 20px; font-weight: 700;
-        font-size: .95rem; width: 100%;
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-guardar-config:active { opacity: .85; }
+.kg-toggle { color:#adb5bd; font-size:1.1rem; transition:transform .2s; flex-shrink:0; }
+.kg-header[aria-expanded="true"] .kg-toggle { transform:rotate(180deg); }
+
+/* Upload panel */
+.upload-panel { padding:0 16px 16px; border-top:1px solid #f0f0f0; }
+
+.upload-row { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
+@media (min-width:576px) { .upload-row { flex-direction:row; } }
+
+.upload-block { flex:1; }
+.upload-block .upload-label { font-size:.78rem; font-weight:700; color:#495057; margin-bottom:6px; }
+
+.upload-zone {
+    border:2px dashed #dee2e6; border-radius:10px;
+    padding:12px; text-align:center;
+    background:#f8f9fa; cursor:pointer;
+    transition:border-color .2s;
+}
+.upload-zone:hover, .upload-zone:focus-within { border-color:#dc3545; background:#fff5f5; }
+.upload-zone .uz-icon  { font-size:1.4rem; display:block; margin-bottom:3px; }
+.upload-zone .uz-text  { font-size:.78rem; color:#6c757d; display:block; }
+.upload-zone .uz-fname { font-size:.75rem; color:#dc3545; font-weight:600; margin-top:3px; word-break:break-all; }
+.upload-zone input[type="file"] { display:none; }
+
+.btn-subir {
+    background:#dc3545; color:#fff; border:none; border-radius:10px;
+    padding:10px; font-weight:700; font-size:.88rem; width:100%;
+    margin-top:12px; display:flex; align-items:center; justify-content:center; gap:7px;
+}
 </style>
 
 <div class="ajuste-header">
     <div class="d-flex justify-content-between align-items-start">
         <div>
             <h4><i class="bi bi-gear-fill me-2"></i>Ajuste Impresión</h4>
-            <p>Configura papel y carga los PDFs</p>
+            <p>Configura papel y actualiza los PDFs de etiquetas</p>
         </div>
         <a href="{% url 'impresora_etiquetas' %}" class="btn btn-light btn-sm fw-semibold" style="border-radius:10px;">
-            <i class="bi bi-printer me-1"></i>Imprimir
+            <i class="bi bi-printer me-1"></i>Impresora
         </a>
     </div>
 </div>
 
-<!-- Configuración de papel -->
-<p class="section-title"><i class="bi bi-file-earmark me-1"></i>Configuración de papel</p>
-<div class="config-card card mb-4">
+<!-- ── Configuración de papel ── -->
+<p class="section-label"><i class="bi bi-file-earmark"></i>Configuración de papel</p>
+<div class="config-card card">
     <div class="card-header"><i class="bi bi-file-earmark me-2"></i>Tipo de papel</div>
     <div class="card-body">
         <form method="post">
@@ -159,14 +113,14 @@
 
             <div class="mb-3">
                 <label class="form-label fw-semibold small">Tamaño</label>
-                <select name="tipo_papel" id="tipo_papel" class="form-select" onchange="actualizarDimensiones(this.value)">
-                    {% for val, label in TIPOS_PAPEL %}
-                    <option value="{{ val }}" {% if config.tipo_papel == val %}selected{% endif %}>{{ label }}</option>
+                <select name="tipo_papel" class="form-select" onchange="actualizarDims(this.value)">
+                    {% for val, lbl in TIPOS_PAPEL %}
+                    <option value="{{ val }}" {% if config.tipo_papel == val %}selected{% endif %}>{{ lbl }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <div id="dimensiones-custom" class="row g-2 mb-3" style="{% if config.tipo_papel != 'personalizado' %}display:none{% endif %}">
+            <div id="dims-custom" class="row g-2 mb-3" style="{% if config.tipo_papel != 'personalizado' %}display:none{% endif %}">
                 <div class="col-6">
                     <label class="form-label small">Ancho (mm)</label>
                     <input type="number" name="ancho_mm_custom" id="ancho_custom" class="form-control" value="{{ config.ancho_mm }}" step="0.1">
@@ -176,101 +130,102 @@
                     <input type="number" name="alto_mm_custom" id="alto_custom" class="form-control" value="{{ config.alto_mm }}" step="0.1">
                 </div>
             </div>
-            <input type="hidden" name="ancho_mm" id="ancho_hidden" value="{{ config.ancho_mm }}">
-            <input type="hidden" name="alto_mm"  id="alto_hidden"  value="{{ config.alto_mm }}">
+            <input type="hidden" name="ancho_mm" id="ancho_h" value="{{ config.ancho_mm }}">
+            <input type="hidden" name="alto_mm"  id="alto_h"  value="{{ config.alto_mm }}">
 
             <div class="mb-4">
                 <label class="form-label fw-semibold small">Orientación</label>
-                <div class="d-flex gap-2">
-                    {% for val, label in ORIENTACIONES %}
-                    <label class="flex-fill text-center border rounded-3 p-2 {% if config.orientacion == val %}border-dark fw-bold{% endif %}" style="cursor:pointer;font-size:.85rem;">
-                        <input type="radio" name="orientacion" value="{{ val }}" {% if config.orientacion == val %}checked{% endif %} class="d-none">
-                        {% if val == 'portrait' %}📄{% else %}🖼{% endif %} {{ label }}
+                <div class="orient-group" id="orient-group">
+                    {% for val, lbl in ORIENTACIONES %}
+                    <label class="orient-opt {% if config.orientacion == val %}active{% endif %}" onclick="selectOrient(this)">
+                        <input type="radio" name="orientacion" value="{{ val }}" {% if config.orientacion == val %}checked{% endif %}>
+                        <span class="orient-icon">{% if val == 'portrait' %}📄{% elif val == 'landscape' %}🖼️{% else %}📑{% endif %}</span>
+                        {{ lbl }}
                     </label>
                     {% endfor %}
                 </div>
             </div>
 
-            <button type="submit" class="btn-guardar-config">
+            <button type="submit" class="btn-guardar">
                 <i class="bi bi-save"></i> Guardar configuración
             </button>
         </form>
     </div>
 </div>
 
-<!-- PDFs por producto -->
-<p class="section-title"><i class="bi bi-upload me-1"></i>PDFs por producto</p>
-<div class="d-flex flex-column gap-3 mb-4">
+<!-- ── PDFs por modelo ── -->
+<p class="section-label"><i class="bi bi-upload"></i>PDFs por modelo de extintor</p>
+<p class="text-muted small mb-3">
+    <i class="bi bi-info-circle me-1"></i>
+    <span class="badge" style="background:#d1e7dd;color:#0a3622;font-size:.7rem;">Subido</span> = archivo cargado vía esta página (prioridad).&nbsp;
+    <span class="badge" style="background:#cfe2ff;color:#084298;font-size:.7rem;">Estático</span> = PDF del repositorio.
+</p>
+
+<div class="d-flex flex-column gap-2 mb-4">
 {% for item in items %}
-<div class="prod-card {% if item.etiqueta and item.etiqueta.archivo_delantera or item.etiqueta and item.etiqueta.archivo_especificaciones %}has-pdfs{% endif %}">
-    <div class="prod-header"
+<div class="kg-card {% if item.etiq_db or item.spec_db %}has-upload{% endif %}">
+    <div class="kg-header"
          data-bs-toggle="collapse"
-         data-bs-target="#up-{{ item.producto.id_producto }}"
+         data-bs-target="#up-{{ item.kg }}"
          aria-expanded="false">
-        {% if item.producto.imagen %}
-        <img class="prod-img" src="{{ item.producto.imagen.url }}" alt="">
-        {% else %}
-        <div class="prod-img-placeholder">🔥</div>
-        {% endif %}
-        <div class="prod-info">
-            <div class="prod-nombre">{{ item.producto.nombre }}</div>
-            <div class="prod-badges">
-                <span class="pdf-badge {% if item.etiqueta and item.etiqueta.archivo_delantera %}ok{% else %}no{% endif %}">
-                    {% if item.etiqueta and item.etiqueta.archivo_delantera %}✓{% else %}–{% endif %} Delantera
-                </span>
-                <span class="pdf-badge {% if item.etiqueta and item.etiqueta.archivo_especificaciones %}ok{% else %}no{% endif %}">
-                    {% if item.etiqueta and item.etiqueta.archivo_especificaciones %}✓{% else %}–{% endif %} Especificaciones
-                </span>
+        <img class="kg-img" src="{{ item.img_url }}" alt="{{ item.nombre }}">
+        <div class="kg-info">
+            <div class="kg-nombre">{{ item.nombre }}</div>
+            <div class="kg-badges">
+                {% if item.etiq_db %}
+                <span class="pdf-badge ok-db"><i class="bi bi-cloud-check me-1"></i>Etiqueta subida</span>
+                {% elif item.etiq_static %}
+                <span class="pdf-badge ok-stat"><i class="bi bi-file-earmark-check me-1"></i>Etiqueta estática</span>
+                {% else %}
+                <span class="pdf-badge none">– Sin etiqueta</span>
+                {% endif %}
+
+                {% if item.spec_db %}
+                <span class="pdf-badge ok-db"><i class="bi bi-cloud-check me-1"></i>Especif. subida</span>
+                {% elif item.spec_static %}
+                <span class="pdf-badge ok-stat"><i class="bi bi-file-earmark-check me-1"></i>Especif. estática</span>
+                {% else %}
+                <span class="pdf-badge none">– Sin especif.</span>
+                {% endif %}
             </div>
         </div>
-        <i class="bi bi-chevron-down prod-toggle"></i>
+        <i class="bi bi-chevron-down kg-toggle"></i>
     </div>
 
-    <div class="collapse" id="up-{{ item.producto.id_producto }}">
+    <div class="collapse" id="up-{{ item.kg }}">
         <div class="upload-panel">
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="upload">
-                <input type="hidden" name="producto_id" value="{{ item.producto.id_producto }}">
+                <input type="hidden" name="nombre_producto" value="{{ item.nombre }}">
 
-                <div class="mb-3">
-                    <p class="fw-semibold small mb-2">PDF Etiqueta Delantera</p>
-                    <div class="upload-zone" onclick="this.querySelector('input').click()">
-                        <label>
-                            <span class="upload-icon">📄</span>
-                            <span id="label-del-{{ item.producto.id_producto }}">
-                                {% if item.etiqueta and item.etiqueta.archivo_delantera %}
-                                Reemplazar PDF actual
-                                {% else %}
-                                Toca para seleccionar PDF
-                                {% endif %}
+                <div class="upload-row">
+                    <div class="upload-block">
+                        <div class="upload-label">📄 Etiqueta (frontal + trasera)</div>
+                        <div class="upload-zone" onclick="this.querySelector('input').click()">
+                            <span class="uz-icon">{% if item.etiq_db %}✅{% else %}📥{% endif %}</span>
+                            <span class="uz-text" id="lbl-etiq-{{ item.kg }}">
+                                {% if item.etiq_db %}Reemplazar PDF subido{% else %}Seleccionar PDF{% endif %}
                             </span>
-                            <input type="file" name="archivo_delantera" accept=".pdf"
-                                   onchange="mostrarNombre(this, 'label-del-{{ item.producto.id_producto }}')">
-                        </label>
+                            <input type="file" name="archivo_etiqueta" accept=".pdf"
+                                   onchange="mostrarNombre(this,'lbl-etiq-{{ item.kg }}')">
+                        </div>
                     </div>
-                </div>
-
-                <div class="mb-1">
-                    <p class="fw-semibold small mb-2">PDF Especificaciones</p>
-                    <div class="upload-zone" onclick="this.querySelector('input').click()">
-                        <label>
-                            <span class="upload-icon">📋</span>
-                            <span id="label-esp-{{ item.producto.id_producto }}">
-                                {% if item.etiqueta and item.etiqueta.archivo_especificaciones %}
-                                Reemplazar PDF actual
-                                {% else %}
-                                Toca para seleccionar PDF
-                                {% endif %}
+                    <div class="upload-block">
+                        <div class="upload-label">📋 Especificaciones técnicas</div>
+                        <div class="upload-zone" onclick="this.querySelector('input').click()">
+                            <span class="uz-icon">{% if item.spec_db %}✅{% else %}📥{% endif %}</span>
+                            <span class="uz-text" id="lbl-spec-{{ item.kg }}">
+                                {% if item.spec_db %}Reemplazar PDF subido{% else %}Seleccionar PDF{% endif %}
                             </span>
                             <input type="file" name="archivo_especificaciones" accept=".pdf"
-                                   onchange="mostrarNombre(this, 'label-esp-{{ item.producto.id_producto }}')">
-                        </label>
+                                   onchange="mostrarNombre(this,'lbl-spec-{{ item.kg }}')">
+                        </div>
                     </div>
                 </div>
 
                 <button type="submit" class="btn-subir">
-                    <i class="bi bi-cloud-upload-fill"></i> Subir PDFs
+                    <i class="bi bi-cloud-upload-fill"></i> Guardar PDFs
                 </button>
             </form>
         </div>
@@ -282,34 +237,30 @@
 <script>
 const DIMS = { carta:[216,279], a4:[210,297], oficio:[216,330] };
 
-function actualizarDimensiones(tipo) {
-    const custom = document.getElementById('dimensiones-custom');
-    const aH = document.getElementById('ancho_hidden');
-    const altH = document.getElementById('alto_hidden');
+function actualizarDims(tipo) {
+    const custom = document.getElementById('dims-custom');
     if (tipo === 'personalizado') {
         custom.style.display = '';
     } else {
         custom.style.display = 'none';
-        aH.value = DIMS[tipo][0];
-        altH.value = DIMS[tipo][1];
+        if (DIMS[tipo]) {
+            document.getElementById('ancho_h').value = DIMS[tipo][0];
+            document.getElementById('alto_h').value  = DIMS[tipo][1];
+        }
     }
+}
+
+function selectOrient(label) {
+    document.querySelectorAll('.orient-opt').forEach(l => l.classList.remove('active'));
+    label.classList.add('active');
+    label.querySelector('input').checked = true;
 }
 
 function mostrarNombre(input, labelId) {
-    const span = document.getElementById(labelId);
     if (input.files && input.files[0]) {
-        span.innerHTML = '<span class="file-name">✓ ' + input.files[0].name + '</span>';
+        document.getElementById(labelId).innerHTML =
+            '<span class="uz-fname">✓ ' + input.files[0].name + '</span>';
     }
 }
-
-// Orientación radio visual
-document.querySelectorAll('input[name="orientacion"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-        document.querySelectorAll('label:has(input[name="orientacion"])').forEach(l => {
-            l.classList.remove('border-dark','fw-bold');
-        });
-        radio.closest('label').classList.add('border-dark','fw-bold');
-    });
-});
 </script>
 {% endblock %}
