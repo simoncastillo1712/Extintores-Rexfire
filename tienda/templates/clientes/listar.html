@@ -16,6 +16,10 @@
 .btn-act { width:36px; height:36px; border-radius:9px; border:none; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
 .btn-edit { background:#ffc107; color:#000; }
 .btn-del  { background:#dc3545; color:#fff; }
+.badge-nuevo { background:#0dcaf0; color:#000; }
+.badge-ok    { background:#e9ecef; color:#495057; }
+.badge-venc  { background:#dc3545; color:#fff; }
+.item-card-seguimiento { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
 </style>
 
 <div class="admin-header">
@@ -49,6 +53,15 @@
                     {% if c.email %}<span><i class="bi bi-envelope me-1"></i>{{ c.email }}</span>{% endif %}
                     {% if c.direccion %}<span><i class="bi bi-geo-alt me-1"></i>{{ c.direccion }}</span>{% endif %}
                 </div>
+                <div class="item-card-seguimiento">
+                    {% if c.es_cliente_nuevo %}
+                    <span class="badge badge-nuevo">Cliente nuevo</span>
+                    {% else %}
+                    <span class="badge badge-ok">Último trabajo: {{ c.fecha_ultimo_trabajo|date:"d/m/Y" }}</span>
+                    <span class="badge {% if c.mantencion_vencida %}badge-venc{% else %}badge-ok{% endif %}">Mantención: {{ c.proxima_mantencion|date:"d/m/Y" }}</span>
+                    <span class="badge {% if c.recarga_vencida %}badge-venc{% else %}badge-ok{% endif %}">Recarga: {{ c.proxima_recarga|date:"d/m/Y" }}</span>
+                    {% endif %}
+                </div>
             </div>
             <div class="item-card-actions">
                 <a href="{% url 'editar_cliente' c.id_cliente %}" class="btn-act btn-edit"><i class="bi bi-pencil"></i></a>
@@ -68,7 +81,7 @@
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-dark">
-                <tr><th>Nombre / Razón Social</th><th>RUT</th><th>Dirección</th><th>Teléfono</th><th>Email</th><th class="text-center">Acciones</th></tr>
+                <tr><th>Nombre / Razón Social</th><th>RUT</th><th>Dirección</th><th>Teléfono</th><th>Email</th><th>Seguimiento</th><th class="text-center">Acciones</th></tr>
             </thead>
             <tbody>
                 {% for c in clientes %}
@@ -78,6 +91,16 @@
                     <td>{{ c.direccion|default:"—" }}</td>
                     <td>{{ c.telefono|default:"—" }}</td>
                     <td>{{ c.email|default:"—" }}</td>
+                    <td>
+                        {% if c.es_cliente_nuevo %}
+                        <span class="badge badge-nuevo">Cliente nuevo</span>
+                        {% else %}
+                        <div class="d-flex flex-column gap-1">
+                            <span class="badge {% if c.mantencion_vencida %}badge-venc{% else %}badge-ok{% endif %}">Mantención: {{ c.proxima_mantencion|date:"d/m/Y" }}</span>
+                            <span class="badge {% if c.recarga_vencida %}badge-venc{% else %}badge-ok{% endif %}">Recarga: {{ c.proxima_recarga|date:"d/m/Y" }}</span>
+                        </div>
+                        {% endif %}
+                    </td>
                     <td class="text-center">
                         <a href="{% url 'editar_cliente' c.id_cliente %}" class="btn btn-warning btn-sm me-1">Editar</a>
                         <form method="post" action="{% url 'eliminar_cliente' c.id_cliente %}" style="display:inline;" onsubmit="return confirm('¿Eliminar {{ c.razon_social }}?');">

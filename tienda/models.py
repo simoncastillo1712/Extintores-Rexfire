@@ -5,6 +5,7 @@
 #   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
+from datetime import date, timedelta
 from django.db import models
 
 
@@ -41,13 +42,45 @@ class Cliente(models.Model):
     telefono = models.CharField(max_length=20, blank=True, null=True)
     email = models.CharField(max_length=100, blank=True, null=True)
     fecha_registro = models.DateTimeField(blank=True, null=True)
+    fecha_ultimo_trabajo = models.DateField(
+        blank=True, null=True,
+        help_text='Fecha del último trabajo realizado (venta/instalación, recambio o recarga). En blanco = cliente nuevo, sin trabajos realizados.',
+    )
 
     class Meta:
         managed = False
         db_table = 'cliente'
-    
+
     def __str__(self):
         return self.razon_social
+
+    @property
+    def es_cliente_nuevo(self):
+        return self.fecha_ultimo_trabajo is None
+
+    @property
+    def proxima_mantencion(self):
+        """Mantención preventiva gratuita: ~6 meses después del último trabajo."""
+        if not self.fecha_ultimo_trabajo:
+            return None
+        return self.fecha_ultimo_trabajo + timedelta(days=182)
+
+    @property
+    def proxima_recarga(self):
+        """Recarga anual: debe contactarse antes de cumplirse el año del último trabajo."""
+        if not self.fecha_ultimo_trabajo:
+            return None
+        return self.fecha_ultimo_trabajo + timedelta(days=365)
+
+    @property
+    def mantencion_vencida(self):
+        pm = self.proxima_mantencion
+        return bool(pm and date.today() >= pm)
+
+    @property
+    def recarga_vencida(self):
+        pr = self.proxima_recarga
+        return bool(pr and date.today() >= pr)
 
 class Compra(models.Model):
     id_compra = models.AutoField(primary_key=True)
@@ -299,3 +332,35 @@ class ConfiguracionEtiqueta(models.Model):
     def get(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class SeguimientoCliente(models.Model):
+    """Gestión de contacto para la mantención preventiva (6 meses) y la recarga anual (12 meses) de un cliente."""
+    TIPOS = [
+        ('mantencion', 'Mantención preventiva (6 meses)'),
+        ('recarga', 'Recarga anual (12 meses)'),
+    ]
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('contactado', 'Contactado'),
+        ('visitado', 'Visitado'),
+        ('no_contesta', 'No contesta'),
+    ]
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='seguimientos')
+    tipo = models.CharField(max_length=12, choices=TIPOS)
+    fecha_referencia = models.DateField(
+        help_text='fecha_ultimo_trabajo del cliente vigente al momento de este seguimiento; '
+                   'si el cliente registra un nuevo trabajo, se abre un seguimiento distinto.',
+    )
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='pendiente')
+    comentario = models.TextField(blank=True)
+    actualizado_por = models.CharField(max_length=150, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'seguimiento_cliente'
+        unique_together = [('cliente', 'tipo', 'fecha_referencia')]
+
+    def __str__(self):
+        return f'{self.cliente.razon_social} - {self.get_tipo_display()} - {self.get_estado_display()}'

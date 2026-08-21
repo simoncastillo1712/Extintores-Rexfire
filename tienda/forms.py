@@ -57,23 +57,30 @@ class ClienteForm(forms.ModelForm):
             'razon_social',
             'direccion',
             'telefono',
-            'email'            
+            'email',
+            'fecha_ultimo_trabajo',
         ]
-        
+
         labels ={
             'rut_cliente': 'Rut: ',
             'razon_social':'Nombre o Razón Social: ',
             'direccion':'Dirección: ',
             'telefono' : 'Teléfono: ',
-            'email':'Correo Electronico'             
+            'email':'Correo Electronico',
+            'fecha_ultimo_trabajo': 'Fecha del último trabajo realizado: ',
         }
-        
+
         widgets = {
             'rut_cliente': forms.TextInput(attrs={'class': 'form-control'}),
             'razon_social': forms.TextInput(attrs={'class': 'form-control'}),
             'direccion': forms.TextInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),            
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'fecha_ultimo_trabajo': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+        }
+
+        help_texts = {
+            'fecha_ultimo_trabajo': 'Dejar en blanco si es un cliente nuevo, sin trabajos realizados aún.',
         }
         
     def clean_rut_cliente(self):

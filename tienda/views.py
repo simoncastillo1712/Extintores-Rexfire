@@ -12,6 +12,7 @@ from django.db.models.deletion import RestrictedError
 from django.db import IntegrityError
 from django.conf import settings
 from urllib.parse import urlencode
+from datetime import timedelta
 import json
 import re
 
@@ -28,7 +29,7 @@ def _productos_venta_ordenados():
     qs = Producto.objects.select_related('id_categoria').all()
     return sorted(qs, key=sort_key)
 
-from .models import Categoria, Producto, Cliente, Proveedor, Venta, DetalleVenta, Boleta, Factura, Vendedor, VentaVendedor, ConversacionWhatsapp, ConversacionEstado, EtiquetaProducto, ConfiguracionEtiqueta
+from .models import Categoria, Producto, Cliente, Proveedor, Venta, DetalleVenta, Boleta, Factura, Vendedor, VentaVendedor, ConversacionWhatsapp, ConversacionEstado, EtiquetaProducto, ConfiguracionEtiqueta, SeguimientoCliente
 from .forms import CategoriaForm, ProductoForm, ClienteForm, ProveedorForm, VendedorForm, ClientePerfilForm
 
 #####################################
@@ -428,6 +429,83 @@ def eliminar_cliente(request, id):
     except Exception:
         messages.error(request, 'Ocurrió un error inesperado al intentar eliminar el cliente.')
     return redirect('listar_clientes')
+
+
+#####################################
+#  SEGUIMIENTO: PRÓXIMAS MANTENCIONES Y RECARGAS
+#####################################
+
+ANTICIPACION_SEGUIMIENTO_DIAS = 30
+
+
+@login_required
+def proximas_recargas(request):
+    """Clientes próximos (o atrasados) a cumplir 6 meses (mantención gratuita)
+    o 12 meses (recarga anual) desde su último trabajo, con su gestión de contacto."""
+    hoy = timezone.now().date()
+    limite = hoy + timedelta(days=ANTICIPACION_SEGUIMIENTO_DIAS)
+
+    clientes = Cliente.objects.exclude(fecha_ultimo_trabajo__isnull=True)
+    etiquetas_estado = dict(SeguimientoCliente.ESTADOS)
+
+    def _armar_lista(tipo, atributo_fecha):
+        items = []
+        for c in clientes:
+            fecha = getattr(c, atributo_fecha)
+            if fecha and fecha <= limite:
+                seg = SeguimientoCliente.objects.filter(
+                    cliente=c, tipo=tipo, fecha_referencia=c.fecha_ultimo_trabajo,
+                ).first()
+                dias = (fecha - hoy).days
+                estado = seg.estado if seg else 'pendiente'
+                items.append({
+                    'cliente': c,
+                    'fecha': fecha,
+                    'dias': dias,
+                    'dias_abs': abs(dias),
+                    'tipo': tipo,
+                    'estado': estado,
+                    'estado_display': etiquetas_estado.get(estado, estado),
+                    'comentario': seg.comentario if seg else '',
+                })
+        items.sort(key=lambda x: x['dias'])
+        return items
+
+    contexto = {
+        'mantenciones': _armar_lista('mantencion', 'proxima_mantencion'),
+        'recargas': _armar_lista('recarga', 'proxima_recarga'),
+        'estados': SeguimientoCliente.ESTADOS,
+        'anticipacion_dias': ANTICIPACION_SEGUIMIENTO_DIAS,
+    }
+    return render(request, 'clientes/proximas_recargas.html', contexto)
+
+
+@login_required
+@require_POST
+def actualizar_seguimiento(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id_cliente=cliente_id)
+    tipo = request.POST.get('tipo')
+    estado = request.POST.get('estado', 'pendiente')
+    comentario = request.POST.get('comentario', '')
+
+    if tipo not in dict(SeguimientoCliente.TIPOS) or estado not in dict(SeguimientoCliente.ESTADOS):
+        messages.error(request, 'Datos de seguimiento no válidos.')
+        return redirect('proximas_recargas')
+
+    if not cliente.fecha_ultimo_trabajo:
+        messages.error(request, 'Este cliente no tiene fecha de último trabajo registrada.')
+        return redirect('proximas_recargas')
+
+    SeguimientoCliente.objects.update_or_create(
+        cliente=cliente, tipo=tipo, fecha_referencia=cliente.fecha_ultimo_trabajo,
+        defaults={
+            'estado': estado,
+            'comentario': comentario,
+            'actualizado_por': request.user.get_full_name() or request.user.username,
+        },
+    )
+    messages.success(request, f'Seguimiento de "{cliente.razon_social}" actualizado.')
+    return redirect('proximas_recargas')
 
 
 #####################################
