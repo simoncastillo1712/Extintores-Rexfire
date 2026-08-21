@@ -41,6 +41,10 @@ class Cliente(models.Model):
     direccion = models.CharField(max_length=150, blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     email = models.CharField(max_length=100, blank=True, null=True)
+    contacto_empresa = models.CharField(
+        max_length=100, blank=True, null=True,
+        help_text='Nombre de la persona de contacto, si el cliente es una empresa.',
+    )
     fecha_registro = models.DateTimeField(blank=True, null=True)
     fecha_ultimo_trabajo = models.DateField(
         blank=True, null=True,

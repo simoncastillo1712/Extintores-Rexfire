@@ -58,6 +58,7 @@ class ClienteForm(forms.ModelForm):
             'direccion',
             'telefono',
             'email',
+            'contacto_empresa',
             'fecha_ultimo_trabajo',
         ]
 
@@ -67,6 +68,7 @@ class ClienteForm(forms.ModelForm):
             'direccion':'Dirección: ',
             'telefono' : 'Teléfono: ',
             'email':'Correo Electronico',
+            'contacto_empresa': 'Contacto (en caso de ser empresa): ',
             'fecha_ultimo_trabajo': 'Fecha del último trabajo realizado: ',
         }
 
@@ -76,6 +78,7 @@ class ClienteForm(forms.ModelForm):
             'direccion': forms.TextInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'contacto_empresa': forms.TextInput(attrs={'class': 'form-control'}),
             'fecha_ultimo_trabajo': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
         }
 

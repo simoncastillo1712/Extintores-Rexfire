@@ -52,6 +52,7 @@
                     {% if c.telefono %}<span><i class="bi bi-telephone me-1"></i>{{ c.telefono }}</span>{% endif %}
                     {% if c.email %}<span><i class="bi bi-envelope me-1"></i>{{ c.email }}</span>{% endif %}
                     {% if c.direccion %}<span><i class="bi bi-geo-alt me-1"></i>{{ c.direccion }}</span>{% endif %}
+                    {% if c.contacto_empresa %}<span><i class="bi bi-person-badge me-1"></i>Contacto: {{ c.contacto_empresa }}</span>{% endif %}
                 </div>
                 <div class="item-card-seguimiento">
                     {% if c.es_cliente_nuevo %}
@@ -81,7 +82,7 @@
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-dark">
-                <tr><th>Nombre / Razón Social</th><th>RUT</th><th>Dirección</th><th>Teléfono</th><th>Email</th><th>Seguimiento</th><th class="text-center">Acciones</th></tr>
+                <tr><th>Nombre / Razón Social</th><th>RUT</th><th>Dirección</th><th>Teléfono</th><th>Email</th><th>Contacto</th><th>Seguimiento</th><th class="text-center">Acciones</th></tr>
             </thead>
             <tbody>
                 {% for c in clientes %}
@@ -91,6 +92,7 @@
                     <td>{{ c.direccion|default:"—" }}</td>
                     <td>{{ c.telefono|default:"—" }}</td>
                     <td>{{ c.email|default:"—" }}</td>
+                    <td>{{ c.contacto_empresa|default:"—" }}</td>
                     <td>
                         {% if c.es_cliente_nuevo %}
                         <span class="badge badge-nuevo">Cliente nuevo</span>
