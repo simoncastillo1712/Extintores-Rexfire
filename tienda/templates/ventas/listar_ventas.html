@@ -13,6 +13,9 @@
 .venta-neto  { font-size:.8rem; color:#6c757d; }
 .venta-info  { font-size:.82rem; color:#495057; display:flex; flex-direction:column; gap:2px; margin-top:6px; }
 .btn-ver { background:#0d6efd; color:#fff; border:none; border-radius:9px; padding:7px 14px; font-size:.83rem; font-weight:600; width:100%; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:6px; }
+.badge-cot-pend { background:#ffc107; color:#000; }
+.badge-cot-venc { background:#dc3545; color:#fff; }
+.badge-cot-ok   { background:#198754; color:#fff; }
 </style>
 
 <div class="admin-header">
@@ -40,14 +43,23 @@
                 <div class="venta-neto">Neto ${{ row.neto|clp }}</div>
             </div>
         </div>
+        <div class="mb-2">
+            {% if row.es_cotizacion_pendiente %}
+            <span class="badge {% if row.cotizacion_vencida %}badge-cot-venc{% else %}badge-cot-pend{% endif %}">
+                {% if row.cotizacion_vencida %}Cotización vencida{% else %}Cotización pendiente{% endif %}
+            </span>
+            {% else %}
+            <span class="badge badge-cot-ok">Confirmada</span>
+            {% endif %}
+        </div>
         <div class="venta-info">
             <span><i class="bi bi-person me-1"></i>
                 {% if row.cliente %}{{ row.cliente.razon_social }}
                 {% elif row.nombre_cliente %}{{ row.nombre_cliente }}
                 {% else %}Sin cliente{% endif %}
             </span>
-            {% if row.info and row.info.id_vendedor %}
-            <span><i class="bi bi-person-badge me-1"></i>{{ row.info.id_vendedor.nombre }}</span>
+            {% if row.vendedor %}
+            <span><i class="bi bi-person-badge me-1"></i>{{ row.vendedor.nombre }}</span>
             {% endif %}
         </div>
         <a href="{% url 'detalle_venta' row.venta.id_venta %}" class="btn-ver">
@@ -62,7 +74,7 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-dark">
                 <tr>
-                    <th>Documento</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th>
+                    <th>Documento</th><th>Estado</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th>
                     <th class="text-end">Neto</th><th class="text-end">Total</th><th class="text-center">Acciones</th>
                 </tr>
             </thead>
@@ -73,9 +85,18 @@
                         <span class="badge {% if row.tipo == 'Boleta' %}bg-primary{% else %}bg-warning text-dark{% endif %}">{{ row.tipo }}</span>
                         N° {{ row.numero }}
                     </td>
+                    <td>
+                        {% if row.es_cotizacion_pendiente %}
+                        <span class="badge {% if row.cotizacion_vencida %}badge-cot-venc{% else %}badge-cot-pend{% endif %}">
+                            {% if row.cotizacion_vencida %}Vencida{% else %}Pendiente{% endif %}
+                        </span>
+                        {% else %}
+                        <span class="badge badge-cot-ok">Confirmada</span>
+                        {% endif %}
+                    </td>
                     <td>{{ row.venta.fecha|date:"d/m/Y H:i" }}</td>
                     <td>{% if row.cliente %}{{ row.cliente.razon_social }}{% elif row.nombre_cliente %}{{ row.nombre_cliente }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-                    <td>{% if row.info and row.info.id_vendedor %}{{ row.info.id_vendedor.nombre }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                    <td>{% if row.vendedor %}{{ row.vendedor.nombre }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
                     <td class="text-end">${{ row.neto|clp }}</td>
                     <td class="text-end fw-semibold">${{ row.venta.total|clp }}</td>
                     <td class="text-center">

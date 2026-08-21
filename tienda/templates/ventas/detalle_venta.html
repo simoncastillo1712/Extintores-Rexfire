@@ -7,6 +7,26 @@
   <a href="{% url 'listar_ventas' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
 </div>
 
+{% if es_cotizacion_pendiente %}
+<div class="alert {% if cotizacion_vencida %}alert-danger{% else %}alert-warning{% endif %} d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div>
+    <strong>{% if cotizacion_vencida %}⚠️ Cotización vencida{% else %}⏳ Cotización pendiente de confirmación{% endif %}</strong>
+    — aún no genera boleta/factura ni comisión hasta que se confirme.
+  </div>
+  <form method="post" action="{% url 'confirmar_venta' venta.id_venta %}" class="m-0"
+        onsubmit="return confirm('¿Confirmar esta venta? Se generará la boleta/factura y se registrará la comisión del vendedor.');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success btn-sm">
+      <i class="bi bi-check-circle-fill"></i> Confirmar Venta
+    </button>
+  </form>
+</div>
+{% else %}
+<div class="alert alert-success">
+  <strong><i class="bi bi-check-circle-fill"></i> Venta confirmada</strong>
+</div>
+{% endif %}
+
 <div class="row g-4">
 
   <!-- Info documento y cliente -->
@@ -57,11 +77,15 @@
         <i class="bi bi-person-badge text-primary"></i> Vendedor
       </div>
       <div class="card-body" style="font-size:0.9rem;">
-        {% if info and info.id_vendedor %}
-          <p class="mb-1"><strong>{{ info.id_vendedor.nombre }}</strong></p>
-          <p class="mb-1 text-muted">RUT: {{ info.id_vendedor.rut }}</p>
+        {% if vendedor %}
+          <p class="mb-1"><strong>{{ vendedor.nombre }}</strong></p>
+          <p class="mb-1 text-muted">RUT: {{ vendedor.rut }}</p>
+          {% if info %}
           <p class="mb-1">Neto venta: <strong>${{ info.neto|clp }}</strong></p>
           <p class="mb-0">Comisión (20%): <span class="text-success fw-bold">${{ info.comision|clp }}</span></p>
+          {% else %}
+          <p class="text-muted mb-0" style="font-size:0.85rem;">La comisión se calculará al confirmar la venta.</p>
+          {% endif %}
         {% else %}
           <p class="text-muted mb-3" style="font-size:0.85rem;">Sin vendedor asignado.</p>
           {% if vendedores_disponibles %}

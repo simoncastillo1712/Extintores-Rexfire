@@ -10,6 +10,27 @@
 <form method="POST" id="formNuevaVenta">
   {% csrf_token %}
 
+  <!-- TIPO DE OPERACIÓN -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header fw-semibold">Tipo de operación</div>
+    <div class="card-body">
+      <div class="d-flex gap-4">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="modo" id="modoCotizacion" value="cotizacion" checked>
+          <label class="form-check-label fw-semibold" for="modoCotizacion">Cotización (pendiente de confirmación del cliente)</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="modo" id="modoDirecta" value="directa">
+          <label class="form-check-label fw-semibold" for="modoDirecta">Venta directa (ya cerrada)</label>
+        </div>
+      </div>
+      <small class="text-muted d-block mt-2">
+        La <strong>cotización</strong> queda guardada como pendiente: no genera boleta/factura ni comisión hasta que el cliente confirme, y es válida por 7 días.
+        La <strong>venta directa</strong> se registra cerrada de inmediato (ej: cliente que paga en el momento).
+      </small>
+    </div>
+  </div>
+
   <!-- VENDEDOR -->
   <div class="card mb-4 shadow-sm">
     <div class="card-header fw-semibold">Vendedor responsable</div>
@@ -160,7 +181,7 @@
   <div class="d-flex gap-2 justify-content-end mb-5">
     <a href="{% url 'inicio' %}" class="btn btn-outline-secondary">Cancelar</a>
     <button type="submit" class="btn btn-primary px-5" id="btnGuardarVenta">
-      <i class="bi bi-receipt"></i> Guardar y ver Cotización
+      <i class="bi bi-receipt"></i> <span id="btnGuardarVentaTexto">Guardar Cotización</span>
     </button>
   </div>
 
@@ -377,17 +398,34 @@ document.addEventListener('DOMContentLoaded', function () {
       alert('Debe agregar al menos un producto o servicio.');
       return;
     }
-    const confirmar = confirm(
-      '¿Está seguro de guardar esta venta?\n\n' +
-      'Al confirmar:\n' +
-      '• La venta quedará registrada en el sistema.\n' +
-      '• Los datos del cliente serán guardados en la base de datos.\n' +
-      '• Se generará la cotización/boleta correspondiente.\n\n' +
-      '¿Desea continuar?'
-    );
+    const modoDirecta = document.getElementById('modoDirecta').checked;
+    const mensaje = modoDirecta
+      ? '¿Está seguro de guardar esta venta como CERRADA?\n\n' +
+        'Al confirmar:\n' +
+        '• La venta quedará registrada en el sistema como confirmada.\n' +
+        '• Los datos del cliente serán guardados en la base de datos.\n' +
+        '• Se generará la boleta/factura y se registrará la comisión del vendedor.\n\n' +
+        '¿Desea continuar?'
+      : '¿Generar esta cotización?\n\n' +
+        'Al confirmar:\n' +
+        '• Quedará guardada como cotización pendiente, válida por 7 días.\n' +
+        '• Los datos del cliente serán guardados en la base de datos.\n' +
+        '• NO se genera boleta/factura ni comisión hasta que el cliente confirme la venta.\n\n' +
+        '¿Desea continuar?';
+    const confirmar = confirm(mensaje);
     if (!confirmar) {
       e.preventDefault();
     }
+  });
+
+  // Cambia el texto del botón según el modo elegido
+  const btnTexto = document.getElementById('btnGuardarVentaTexto');
+  document.querySelectorAll('input[name="modo"]').forEach(r => {
+    r.addEventListener('change', function () {
+      btnTexto.textContent = document.getElementById('modoDirecta').checked
+        ? 'Guardar Venta'
+        : 'Guardar Cotización';
+    });
   });
 
   // Primera fila al cargar

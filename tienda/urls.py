@@ -49,6 +49,7 @@ urlpatterns = [
     # VENTAS Y COTIZACIONES
     path('nueva_venta/', views.nueva_venta, name='nueva_venta'),
     path('cotizacion/<int:venta_id>/', views.ver_cotizacion, name='ver_cotizacion'),
+    path('cotizacion/<int:venta_id>/confirmar/', views.confirmar_venta, name='confirmar_venta'),
 
     # AUTENTICACIÓN Y COMPRA DE CLIENTES
     path('cliente/login/',    views.cliente_login,          name='cliente_login'),

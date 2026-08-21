@@ -7,6 +7,7 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from datetime import date, timedelta
 from django.db import models
+from django.utils import timezone
 
 
 class Boleta(models.Model):
@@ -204,11 +205,26 @@ class TablaVistaFactura(models.Model):
 
 class Venta(models.Model):
     ORIGENES = [('web', 'Web'), ('chatbot', 'Chatbot'), ('directo', 'Venta directa')]
+    ESTADOS = [
+        ('cotizacion', 'Cotización pendiente'),
+        ('confirmada', 'Venta confirmada'),
+    ]
+    VALIDEZ_COTIZACION_DIAS = 7
+
     id_venta       = models.AutoField(primary_key=True)
     fecha          = models.DateTimeField()
     total          = models.IntegerField()
     tipo_documento = models.CharField(max_length=7)
     origen         = models.CharField(max_length=10, default='web', null=True, blank=True)
+    estado         = models.CharField(max_length=12, choices=ESTADOS, default='confirmada')
+    id_cliente     = models.ForeignKey(
+        'Cliente', models.SET_NULL, db_column='id_cliente',
+        null=True, blank=True, db_constraint=False, related_name='ventas_pendientes',
+    )
+    id_vendedor    = models.ForeignKey(
+        'Vendedor', models.SET_NULL, db_column='id_vendedor',
+        null=True, blank=True, db_constraint=False, related_name='ventas_pendientes',
+    )
 
     class Meta:
         managed = False
@@ -216,6 +232,21 @@ class Venta(models.Model):
 
     def __str__(self):
         return str(self.fecha)
+
+    @property
+    def es_cotizacion_pendiente(self):
+        return self.estado == 'cotizacion'
+
+    @property
+    def fecha_vencimiento_cotizacion(self):
+        if not self.fecha:
+            return None
+        return self.fecha + timedelta(days=self.VALIDEZ_COTIZACION_DIAS)
+
+    @property
+    def cotizacion_vencida(self):
+        vencimiento = self.fecha_vencimiento_cotizacion
+        return bool(self.es_cotizacion_pendiente and vencimiento and timezone.now() > vencimiento)
 
 
 class ConversacionWhatsapp(models.Model):

@@ -2,6 +2,29 @@
 {% load static rexfire_filters %}
 {% block contenido %}
 
+<!-- Estado de la venta (no se imprime) -->
+{% if es_cotizacion_pendiente %}
+<div class="alert {% if cotizacion_vencida %}alert-danger{% else %}alert-warning{% endif %} no-print d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div>
+    <strong>{% if cotizacion_vencida %}⚠️ Cotización vencida{% else %}⏳ Cotización pendiente de confirmación{% endif %}</strong>
+    — válida hasta {{ fecha_vencimiento_cotizacion|date:"d/m/Y" }}. Esta venta aún no genera boleta/factura ni comisión hasta que se confirme.
+  </div>
+  {% if user.is_authenticated %}
+  <form method="post" action="{% url 'confirmar_venta' venta.id_venta %}" class="m-0"
+        onsubmit="return confirm('¿Confirmar esta venta? Se generará la boleta/factura y se registrará la comisión del vendedor.');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success btn-sm">
+      <i class="bi bi-check-circle-fill"></i> Confirmar Venta
+    </button>
+  </form>
+  {% endif %}
+</div>
+{% elif user.is_authenticated %}
+<div class="alert alert-success no-print">
+  <strong><i class="bi bi-check-circle-fill"></i> Venta confirmada</strong> — registrada en el sistema con boleta/factura y comisión asignada.
+</div>
+{% endif %}
+
 <!-- Botones de acción (no se imprimen) -->
 <div class="d-flex gap-2 mb-4 no-print">
   <button onclick="window.print()" class="btn btn-primary">
@@ -187,7 +210,9 @@
 
   <div class="cot-footer">
     <p class="mb-1">✅ Productos certificados según Normativas Chilenas vigentes (CESMEC).</p>
-    <p class="mb-1">⏳ Cotización válida por <strong>30 días</strong> a partir de la fecha de emisión.</p>
+    {% if es_cotizacion_pendiente %}
+    <p class="mb-1">⏳ Cotización válida por <strong>7 días</strong> a partir de la fecha de emisión (hasta {{ fecha_vencimiento_cotizacion|date:"d/m/Y" }}).</p>
+    {% endif %}
     <p class="mb-0 text-muted" style="font-size:0.8rem;">Una vez retirados los productos no se aceptarán devoluciones. Garantía máxima 1 año.</p>
   </div>
 

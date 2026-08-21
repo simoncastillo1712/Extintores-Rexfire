@@ -32,6 +32,38 @@ def _productos_venta_ordenados():
 from .models import Categoria, Producto, Cliente, Proveedor, Venta, DetalleVenta, Boleta, Factura, Vendedor, VentaVendedor, ConversacionWhatsapp, ConversacionEstado, EtiquetaProducto, ConfiguracionEtiqueta, SeguimientoCliente
 from .forms import CategoriaForm, ProductoForm, ClienteForm, ProveedorForm, VendedorForm, ClientePerfilForm
 
+
+def _confirmar_venta(venta, cliente, vendedor_obj, neto):
+    """Cierra una venta: genera boleta/factura y registra la comisión del vendedor.
+    Se usa tanto para ventas directas (cierre inmediato) como para confirmar
+    una cotización pendiente que el cliente aceptó."""
+    if venta.tipo_documento.lower() == 'boleta':
+        ultimo = Boleta.objects.aggregate(m=Max('numero_boleta'))['m'] or 0
+        Boleta(id_venta=venta, numero_boleta=ultimo + 1, fecha_emision=timezone.now()).save()
+    else:
+        ultimo = Factura.objects.aggregate(m=Max('numero_factura'))['m'] or 0
+        Factura(
+            id_venta=venta,
+            numero_factura=ultimo + 1,
+            fecha_emision=timezone.now(),
+            id_cliente=cliente,
+        ).save()
+
+    comision = round(neto * 0.20)
+    VentaVendedor(
+        id_venta=venta,
+        id_vendedor=vendedor_obj,
+        id_cliente=cliente.id_cliente if cliente else None,
+        nombre_cliente=cliente.razon_social if cliente else None,
+        neto=neto,
+        comision=comision,
+    ).save()
+
+    if venta.estado != 'confirmada':
+        venta.estado = 'confirmada'
+        venta.save(update_fields=['estado'])
+
+
 #####################################
 # VISTAS PUBLICAS
 #####################################
@@ -592,6 +624,9 @@ def nueva_venta(request):
     if request.method == 'POST':
         tipo_documento = request.POST.get('tipo_documento', 'boleta')
         cliente_mode = request.POST.get('cliente_mode', 'new')
+        modo = request.POST.get('modo', 'cotizacion')
+        if modo not in ('cotizacion', 'directa'):
+            modo = 'cotizacion'
 
         # Obtener o crear cliente
         cliente = None
@@ -613,6 +648,15 @@ def nueva_venta(request):
                         'fecha_registro': timezone.now(),
                     }
                 )
+
+        # Vendedor responsable (se guarda igual para cotizaciones, se usa recién al confirmar)
+        vendedor_id = request.POST.get('vendedor_id', '').strip()
+        vendedor_obj = None
+        if vendedor_id:
+            try:
+                vendedor_obj = Vendedor.objects.get(id_vendedor=int(vendedor_id))
+            except (Vendedor.DoesNotExist, ValueError):
+                pass
 
         # Procesar líneas de productos y servicios
         producto_ids = request.POST.getlist('producto_id[]')
@@ -654,10 +698,14 @@ def nueva_venta(request):
         total = neto + iva
 
         # Crear Venta
-        venta = Venta(fecha=timezone.now(), total=total, tipo_documento=tipo_documento)
+        venta = Venta(
+            fecha=timezone.now(), total=total, tipo_documento=tipo_documento, origen='directo',
+            estado='confirmada' if modo == 'directa' else 'cotizacion',
+            id_cliente=cliente, id_vendedor=vendedor_obj,
+        )
         venta.save()
 
-        # Crear DetalleVenta
+        # Crear DetalleVenta (se guardan siempre, sean cotización o venta directa)
         for producto, cantidad, precio_unit, subtotal in lineas:
             DetalleVenta(
                 id_venta=venta,
@@ -667,43 +715,19 @@ def nueva_venta(request):
                 subtotal=subtotal,
             ).save()
 
-        # Crear Boleta o Factura
-        if tipo_documento == 'boleta':
-            ultimo = Boleta.objects.aggregate(m=Max('numero_boleta'))['m'] or 0
-            Boleta(id_venta=venta, numero_boleta=ultimo + 1, fecha_emision=timezone.now()).save()
+        if modo == 'directa':
+            # Venta ya cerrada: se genera boleta/factura y comisión de inmediato
+            _confirmar_venta(venta, cliente, vendedor_obj, neto)
+            messages.success(request, 'Venta registrada exitosamente.')
         else:
-            ultimo = Factura.objects.aggregate(m=Max('numero_factura'))['m'] or 0
-            Factura(
-                id_venta=venta,
-                numero_factura=ultimo + 1,
-                fecha_emision=timezone.now(),
-                id_cliente=cliente,
-            ).save()
+            # Cotización pendiente: no se emite boleta/factura ni comisión hasta que se confirme
+            messages.success(
+                request,
+                f'Cotización generada. Válida por {Venta.VALIDEZ_COTIZACION_DIAS} días; '
+                'aún no queda registrada como venta cerrada.',
+            )
 
-        # Registrar vendedor y comisión
-        vendedor_id = request.POST.get('vendedor_id', '').strip()
-        vendedor_obj = None
-        if vendedor_id:
-            try:
-                vendedor_obj = Vendedor.objects.get(id_vendedor=int(vendedor_id))
-            except (Vendedor.DoesNotExist, ValueError):
-                pass
-
-        comision = round(neto * 0.20)
-        VentaVendedor(
-            id_venta=venta,
-            id_vendedor=vendedor_obj,
-            id_cliente=cliente.id_cliente if cliente else None,
-            nombre_cliente=cliente.razon_social if cliente else None,
-            neto=neto,
-            comision=comision,
-        ).save()
-
-        messages.success(request, 'Venta registrada exitosamente.')
-        url = reverse('ver_cotizacion', args=[venta.id_venta])
-        if cliente and tipo_documento == 'boleta':
-            url += f'?cliente_id={cliente.id_cliente}'
-        return redirect(url)
+        return redirect(reverse('ver_cotizacion', args=[venta.id_venta]))
 
     # GET
     return render(request, 'ventas/nueva.html', {
@@ -742,6 +766,8 @@ def ver_cotizacion(request, venta_id):
     cliente = None
     if factura and factura.id_cliente:
         cliente = factura.id_cliente
+    elif venta.id_cliente:
+        cliente = venta.id_cliente
     elif request.GET.get('cliente_id'):
         try:
             cliente = Cliente.objects.get(id_cliente=int(request.GET['cliente_id']))
@@ -783,7 +809,29 @@ def ver_cotizacion(request, venta_id):
         'total_con_despacho_neto': total_con_despacho_neto,
         'total_con_despacho_iva': total_con_despacho_iva,
         'total_con_despacho': total_con_despacho,
+        'es_cotizacion_pendiente': venta.es_cotizacion_pendiente,
+        'cotizacion_vencida': venta.cotizacion_vencida,
+        'fecha_vencimiento_cotizacion': venta.fecha_vencimiento_cotizacion,
     })
+
+
+@login_required
+@require_POST
+def confirmar_venta(request, venta_id):
+    """El cliente aceptó la cotización: recién ahora se emite boleta/factura y se registra la comisión."""
+    venta = get_object_or_404(Venta, id_venta=venta_id)
+
+    if venta.estado == 'confirmada':
+        messages.info(request, 'Esta venta ya estaba confirmada.')
+        return redirect('ver_cotizacion', venta_id=venta.id_venta)
+
+    detalles = DetalleVenta.objects.filter(id_venta=venta)
+    neto = sum(d.subtotal for d in detalles)
+
+    _confirmar_venta(venta, venta.id_cliente, venta.id_vendedor, neto)
+
+    messages.success(request, 'Venta confirmada: se generó la boleta/factura y se registró la comisión.')
+    return redirect('ver_cotizacion', venta_id=venta.id_venta)
 
 
 #####################################
@@ -979,6 +1027,10 @@ def _build_venta_row(v):
             cliente_obj = Cliente.objects.get(id_cliente=info.id_cliente)
         except Cliente.DoesNotExist:
             pass
+    elif v.id_cliente:
+        cliente_obj = v.id_cliente
+
+    vendedor_obj = info.id_vendedor if info else v.id_vendedor
 
     # Neto: desde VentaVendedor si está disponible, sino derivado del total
     if info and info.neto:
@@ -994,8 +1046,11 @@ def _build_venta_row(v):
         'factura': factura,
         'info': info,
         'cliente': cliente_obj,
-        'nombre_cliente': info.nombre_cliente if info else None,
+        'nombre_cliente': info.nombre_cliente if info else (cliente_obj.razon_social if cliente_obj else None),
+        'vendedor': vendedor_obj,
         'neto': neto,
+        'es_cotizacion_pendiente': v.es_cotizacion_pendiente,
+        'cotizacion_vencida': v.cotizacion_vencida,
     }
 
 
@@ -1123,6 +1178,13 @@ def asignar_vendedor(request, venta_id):
     venta = get_object_or_404(Venta, id_venta=venta_id)
     vendedor_id = request.POST.get('vendedor_id', '').strip()
     vendedor = get_object_or_404(Vendedor, id_vendedor=int(vendedor_id))
+
+    if venta.es_cotizacion_pendiente:
+        # Aún no hay VentaVendedor (se crea recién al confirmar); solo se guarda en la Venta.
+        venta.id_vendedor = vendedor
+        venta.save(update_fields=['id_vendedor'])
+        messages.success(request, f'Vendedor "{vendedor.nombre}" asignado a la cotización.')
+        return redirect('detalle_venta', venta_id=venta_id)
 
     try:
         vv = venta.info_vendedor
