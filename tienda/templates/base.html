@@ -79,6 +79,18 @@
                             {% endif %}
 
                             {% if user.is_authenticated %}
+                            {% if user.vendedor_perfil %}
+                            <!-- CUENTA DE VENDEDOR: solo su perfil -->
+                            <a class="nav-link fw-semibold" href="{% url 'mi_perfil_vendedor' %}">
+                                <i class="bi bi-person-badge-fill text-primary"></i> Mi Perfil
+                            </a>
+                            <form action="{% url 'logout_view' %}" method="post" class="p-0 m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm px-3">
+                                    <i class="bi bi-box-arrow-right"></i> Salir
+                                </button>
+                            </form>
+                            {% else %}
                             <!-- PANEL DE CONTROL (dropdown) -->
                             <div class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button"
@@ -118,6 +130,9 @@
                                     </a></li>
                                     <li><a class="dropdown-item" href="{% url 'listar_ventas' %}">
                                         <i class="bi bi-receipt-cutoff me-2 text-secondary"></i>Ventas
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'cotizaciones_pendientes' %}">
+                                        <i class="bi bi-hourglass-split me-2 text-warning"></i>Cotizaciones Pendientes
                                     </a></li>
 
                                     <li><hr class="dropdown-divider"></li>
@@ -161,6 +176,7 @@
                                     <i class="bi bi-box-arrow-right"></i> Salir
                                 </button>
                             </form>
+                            {% endif %}
 
                             {% else %}
                             <a class="nav-link" href="{% url 'login_view' %}">
@@ -190,7 +206,7 @@
             {% endif %}
 
             {% if messages %}
-            <div class="mb-3">
+            <div class="mb-3 no-print">
                 {% for message in messages %}
                 <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show" role="alert">
                     {{ message }}

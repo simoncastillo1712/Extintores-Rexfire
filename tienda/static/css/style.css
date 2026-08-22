@@ -632,17 +632,29 @@ section.my-5 {
    =========================== */
 
 @media print {
+  @page {
+    size: letter;
+    margin: 8mm;
+  }
+
   .no-print,
   header,
   nav,
   .site-footer,
-  .hero-image-wrapper {
+  .hero-image-wrapper,
+  #wa-widget {
     display: none !important;
+  }
+
+  /* Achica todo el documento (paddings/márgenes/tipografía usan rem) para
+     que la cotización completa entre en una sola hoja al imprimir. */
+  html {
+    font-size: 11px;
   }
 
   body {
     background: white !important;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .container {
@@ -657,6 +669,10 @@ section.my-5 {
     max-width: 100% !important;
   }
 
+  .cot-logo {
+    height: 46px;
+  }
+
   .cot-tabla thead tr {
     background: #CC0000 !important;
     -webkit-print-color-adjust: exact;
@@ -667,6 +683,19 @@ section.my-5 {
     background: #CC0000 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* Evita que un bloque quede cortado a la mitad entre hojas */
+  .cot-header,
+  .cot-cliente,
+  .cot-tabla,
+  .cot-tabla tr,
+  .row.justify-content-end,
+  .row.g-3,
+  .cot-box,
+  .cot-footer {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   a[href]:after { content: none !important; }

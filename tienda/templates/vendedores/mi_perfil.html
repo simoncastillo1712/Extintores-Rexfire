@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load rexfire_filters %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-0">Mi Perfil — {{ vendedor.nombre }}</h2>
+    <small class="text-muted">RUT: {{ vendedor.rut }} &nbsp;|&nbsp; Comisión: 20% del neto por venta</small>
+  </div>
+</div>
+
+<!-- Resumen -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card shadow-sm text-center p-3">
+      <div class="text-muted" style="font-size:0.82rem;">Ventas confirmadas</div>
+      <div class="fs-3 fw-bold text-primary">{{ ventas_info|length }}</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card shadow-sm text-center p-3">
+      <div class="text-muted" style="font-size:0.82rem;">Neto total vendido</div>
+      <div class="fs-4 fw-bold">${{ total_neto|clp }}</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card shadow-sm text-center p-3 border-success">
+      <div class="text-muted" style="font-size:0.82rem;">Comisión total (20%)</div>
+      <div class="fs-4 fw-bold text-success">${{ total_comision|clp }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Cotizaciones pendientes -->
+<h5 class="fw-bold mb-3"><i class="bi bi-hourglass-split text-warning"></i> Mis cotizaciones pendientes</h5>
+{% if cotizaciones_pendientes %}
+<div class="card shadow-sm mb-4">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>Estado</th><th>Fecha</th><th>Vence</th><th>Cliente</th><th class="text-end">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in cotizaciones_pendientes %}
+        <tr>
+          <td>
+            <span class="badge {% if v.cotizacion_vencida %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+              {% if v.cotizacion_vencida %}Vencida{% else %}Pendiente{% endif %}
+            </span>
+          </td>
+          <td>{{ v.fecha|date:"d/m/Y" }}</td>
+          <td>{{ v.fecha_vencimiento_cotizacion|date:"d/m/Y" }}</td>
+          <td>{% if v.id_cliente %}{{ v.id_cliente.razon_social }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+          <td class="text-end fw-semibold">${{ v.total|clp }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-light border mb-4">No tienes cotizaciones pendientes de confirmación.</div>
+{% endif %}
+
+<!-- Ventas confirmadas -->
+<h5 class="fw-bold mb-3"><i class="bi bi-check-circle text-success"></i> Mis ventas confirmadas</h5>
+{% if ventas_info %}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th class="text-end">Neto venta</th>
+          <th class="text-end">Comisión (20%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vv in ventas_info %}
+        <tr>
+          <td>{{ vv.id_venta.fecha|date:"d/m/Y" }}</td>
+          <td>
+            {% if vv.nombre_cliente %}{{ vv.nombre_cliente }}
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </td>
+          <td class="text-end">${{ vv.neto|clp }}</td>
+          <td class="text-end text-success fw-bold">${{ vv.comision|clp }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="table-light fw-bold">
+        <tr>
+          <td colspan="2">TOTALES</td>
+          <td class="text-end">${{ total_neto|clp }}</td>
+          <td class="text-end text-success">${{ total_comision|clp }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">Aún no tienes ventas confirmadas.</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load rexfire_filters %}
+{% block contenido %}
+<style>
+.admin-header { background:linear-gradient(135deg,#fd7e14 0%,#dc6803 100%); border-radius:16px; padding:18px 20px; color:#fff; margin-bottom:20px; }
+.admin-header h4 { font-size:1.2rem; font-weight:700; margin:0; }
+.venta-card { border:1.5px solid #e9ecef; border-radius:14px; background:#fff; padding:14px 16px; margin-bottom:10px; }
+.venta-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.venta-fecha { font-size:.78rem; color:#6c757d; }
+.venta-total { font-weight:700; font-size:1.05rem; color:#212529; }
+.venta-neto  { font-size:.8rem; color:#6c757d; }
+.venta-info  { font-size:.82rem; color:#495057; display:flex; flex-direction:column; gap:2px; margin-top:6px; }
+.badge-cot-pend { background:#ffc107; color:#000; }
+.badge-cot-venc { background:#dc3545; color:#fff; }
+.venta-actions { display:flex; gap:8px; margin-top:10px; }
+</style>
+
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-hourglass-split me-2"></i>Cotizaciones Pendientes</h4>
+        <a href="{% url 'listar_ventas' %}" class="btn btn-light btn-sm fw-semibold"><i class="bi bi-receipt-cutoff me-1"></i>Todas las ventas</a>
+    </div>
+</div>
+
+{% if rows %}
+<!-- Mobile: cards -->
+<div class="d-md-none">
+    {% for row in rows %}
+    <div class="venta-card">
+        <div class="venta-card-top">
+            <div>
+                <span class="badge {% if row.cotizacion_vencida %}badge-cot-venc{% else %}badge-cot-pend{% endif %}">
+                    {% if row.cotizacion_vencida %}Vencida{% else %}Pendiente{% endif %}
+                </span>
+                <div class="venta-fecha mt-1">{{ row.venta.fecha|date:"d/m/Y H:i" }} — vence {{ row.venta.fecha_vencimiento_cotizacion|date:"d/m/Y" }}</div>
+            </div>
+            <div class="text-end">
+                <div class="venta-total">${{ row.venta.total|clp }}</div>
+                <div class="venta-neto">Neto ${{ row.neto|clp }}</div>
+            </div>
+        </div>
+        <div class="venta-info">
+            <span><i class="bi bi-person me-1"></i>
+                {% if row.cliente %}{{ row.cliente.razon_social }}
+                {% elif row.nombre_cliente %}{{ row.nombre_cliente }}
+                {% else %}Sin cliente{% endif %}
+            </span>
+            <span><i class="bi bi-person-badge me-1"></i>
+                {% if row.vendedor %}{{ row.vendedor.nombre }}{% else %}Sin vendedor asignado{% endif %}
+            </span>
+        </div>
+        <div class="venta-actions">
+            <a href="{% url 'detalle_venta' row.venta.id_venta %}" class="btn btn-outline-primary btn-sm flex-fill">
+                <i class="bi bi-eye"></i> Ver detalle
+            </a>
+            <form method="post" action="{% url 'confirmar_venta' row.venta.id_venta %}" class="flex-fill m-0"
+                  onsubmit="return confirm('¿Confirmar esta venta? Se generará la boleta/factura y se registrará la comisión del vendedor.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-check-circle-fill"></i> Confirmar</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<!-- Desktop: tabla -->
+<div class="d-none d-md-block card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Estado</th><th>Fecha</th><th>Vence</th><th>Cliente</th><th>Vendedor</th>
+                    <th class="text-end">Neto</th><th class="text-end">Total</th><th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td>
+                        <span class="badge {% if row.cotizacion_vencida %}badge-cot-venc{% else %}badge-cot-pend{% endif %}">
+                            {% if row.cotizacion_vencida %}Vencida{% else %}Pendiente{% endif %}
+                        </span>
+                    </td>
+                    <td>{{ row.venta.fecha|date:"d/m/Y H:i" }}</td>
+                    <td>{{ row.venta.fecha_vencimiento_cotizacion|date:"d/m/Y" }}</td>
+                    <td>{% if row.cliente %}{{ row.cliente.razon_social }}{% elif row.nombre_cliente %}{{ row.nombre_cliente }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                    <td>{% if row.vendedor %}{{ row.vendedor.nombre }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                    <td class="text-end">${{ row.neto|clp }}</td>
+                    <td class="text-end fw-semibold">${{ row.venta.total|clp }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'detalle_venta' row.venta.id_venta %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i></a>
+                        <form method="post" action="{% url 'confirmar_venta' row.venta.id_venta %}" style="display:inline;"
+                              onsubmit="return confirm('¿Confirmar esta venta? Se generará la boleta/factura y se registrará la comisión del vendedor.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-circle-fill"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-check2-circle" style="font-size:3rem;opacity:.3;"></i>
+    <p class="mt-3">No hay cotizaciones pendientes.</p>
+</div>
+{% endif %}
+{% endblock %}

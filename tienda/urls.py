@@ -61,6 +61,7 @@ urlpatterns = [
 
     # VENTAS
     path('ventas/',                views.listar_ventas,   name='listar_ventas'),
+    path('ventas/cotizaciones-pendientes/', views.cotizaciones_pendientes, name='cotizaciones_pendientes'),
     path('ventas/<int:venta_id>/', views.detalle_venta,          name='detalle_venta'),
     path('ventas/<int:venta_id>/asignar-vendedor/', views.asignar_vendedor, name='asignar_vendedor'),
 
@@ -70,6 +71,7 @@ urlpatterns = [
     path('vendedores/editar/<int:id>/',        views.editar_vendedor,      name='editar_vendedor'),
     path('vendedores/eliminar/<int:id>/',      views.eliminar_vendedor,    name='eliminar_vendedor'),
     path('vendedores/comisiones/<int:id>/',    views.comisiones_vendedor,  name='comisiones_vendedor'),
+    path('mi-perfil/',                         views.mi_perfil_vendedor,   name='mi_perfil_vendedor'),
 
     # IMPRESORA DE ETIQUETAS
     path('etiquetas/',                         views.impresora_etiquetas,  name='impresora_etiquetas'),

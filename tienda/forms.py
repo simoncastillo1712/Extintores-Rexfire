@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import User
 from .models import Categoria, Producto, Cliente, Proveedor, Vendedor
 
 class CategoriaForm(forms.ModelForm):
@@ -147,6 +148,17 @@ class ClientePerfilForm(forms.ModelForm):
 
 
 class VendedorForm(forms.ModelForm):
+    username = forms.CharField(
+        label='Usuario de acceso', max_length=150, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
+        help_text='Para que el vendedor pueda iniciar sesión y ver su propio perfil (cotizaciones, ventas, comisiones). Deja en blanco si no necesita acceso.',
+    )
+    password = forms.CharField(
+        label='Contraseña', required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
+        help_text='Al editar, deja en blanco para no cambiar la contraseña actual.',
+    )
+
     class Meta:
         model = Vendedor
         fields = ['nombre', 'rut', 'telefono', 'email', 'activo']
@@ -164,3 +176,27 @@ class VendedorForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk and self.instance.user_id:
+            self.fields['username'].initial = self.instance.user.username
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if username:
+            qs = User.objects.filter(username=username)
+            if self.instance.pk and self.instance.user_id:
+                qs = qs.exclude(pk=self.instance.user_id)
+            if qs.exists():
+                raise forms.ValidationError('Ese nombre de usuario ya está en uso.')
+        return username
+
+    def clean(self):
+        cleaned = super().clean()
+        username = cleaned.get('username', '')
+        password = cleaned.get('password', '')
+        tiene_cuenta = bool(self.instance.pk and self.instance.user_id)
+        if username and not password and not tiene_cuenta:
+            self.add_error('password', 'Debes definir una contraseña para la nueva cuenta de acceso.')
+        return cleaned

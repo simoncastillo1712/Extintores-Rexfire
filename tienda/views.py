@@ -1,6 +1,8 @@
+from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db.models import Q, Max
 from django.core.paginator import Paginator
@@ -15,6 +17,19 @@ from urllib.parse import urlencode
 from datetime import timedelta
 import json
 import re
+
+
+def admin_required(view_func):
+    """Como login_required, pero ademas bloquea las cuentas de vendedor:
+    esas solo pueden ver su propio perfil (Mi Perfil), no el resto del panel."""
+    @wraps(view_func)
+    @login_required
+    def wrapped(request, *args, **kwargs):
+        if hasattr(request.user, 'vendedor_perfil'):
+            messages.info(request, 'Tu cuenta solo tiene acceso a tu perfil de vendedor.')
+            return redirect('mi_perfil_vendedor')
+        return view_func(request, *args, **kwargs)
+    return wrapped
 
 
 def _productos_venta_ordenados():
@@ -237,7 +252,7 @@ def logout_view(request):
 #  GESTION DE LAS CATEGORIAS
 #####################################
 
-@login_required
+@admin_required
 def listar_categorias(request):
     q = request.GET.get('q', '')
     if q:
@@ -252,7 +267,7 @@ def listar_categorias(request):
     }
     return render(request, 'categorias/listar.html', contexto)
 
-@login_required
+@admin_required
 def crear_categoria(request):
     if request.method == 'POST':
         form = CategoriaForm(request.POST)
@@ -270,7 +285,7 @@ def crear_categoria(request):
     
     return render(request, 'categorias/form.html', contexto)
 
-@login_required
+@admin_required
 def editar_categoria(request, id):
     categoria = get_object_or_404(Categoria, id_categoria=id)
     
@@ -291,7 +306,7 @@ def editar_categoria(request, id):
     return render(request, 'categorias/form.html', contexto)
     
     
-@login_required
+@admin_required
 @require_POST
 def eliminar_categoria(request, id):
     categoria = get_object_or_404(Categoria, id_categoria=id)
@@ -311,7 +326,7 @@ def eliminar_categoria(request, id):
 #  GESTION DE PRODUCTOS
 #####################################
 
-@login_required
+@admin_required
 def listar_productos_admin(request):
     q = request.GET.get('q', '')
     productos = Producto.objects.select_related('id_categoria')
@@ -327,7 +342,7 @@ def listar_productos_admin(request):
     }
     return render(request, 'productos/listar_admin.html', contexto)
 
-@login_required
+@admin_required
 def crear_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)
@@ -340,7 +355,7 @@ def crear_producto(request):
     return render(request, 'productos/form.html', {'form': form})
 
 
-@login_required
+@admin_required
 def editar_producto(request, id):
     producto = get_object_or_404(Producto, id_producto=id)
     if request.method == 'POST':
@@ -354,7 +369,7 @@ def editar_producto(request, id):
     return render(request, 'productos/form.html', {'form': form, 'producto': producto})
 
 
-@login_required
+@admin_required
 @require_POST
 def eliminar_producto(request, id):
     producto = get_object_or_404(Producto, id_producto=id)
@@ -382,7 +397,7 @@ def eliminar_producto(request, id):
 #  GESTION DE CLIENTES
 #####################################
 
-@login_required
+@admin_required
 def listar_clientes(request):
     q = request.GET.get('q', '')
     if q:
@@ -401,7 +416,7 @@ def listar_clientes(request):
     }
     return render(request, 'clientes/listar.html', contexto)
 
-@login_required
+@admin_required
 def crear_cliente(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
@@ -422,7 +437,7 @@ def crear_cliente(request):
     
     return render(request, 'clientes/form.html', contexto)
 
-@login_required
+@admin_required
 def editar_cliente(request, id):
     cliente = get_object_or_404(Cliente, id_cliente=id)
     
@@ -446,7 +461,7 @@ def editar_cliente(request, id):
     return render(request, 'clientes/form.html', contexto)
 
 
-@login_required
+@admin_required
 @require_POST
 def eliminar_cliente(request, id):
     cliente = get_object_or_404(Cliente, id_cliente=id)
@@ -470,7 +485,7 @@ def eliminar_cliente(request, id):
 ANTICIPACION_SEGUIMIENTO_DIAS = 30
 
 
-@login_required
+@admin_required
 def proximas_recargas(request):
     """Clientes próximos (o atrasados) a cumplir 6 meses (mantención gratuita)
     o 12 meses (recarga anual) desde su último trabajo, con su gestión de contacto."""
@@ -512,7 +527,7 @@ def proximas_recargas(request):
     return render(request, 'clientes/proximas_recargas.html', contexto)
 
 
-@login_required
+@admin_required
 @require_POST
 def actualizar_seguimiento(request, cliente_id):
     cliente = get_object_or_404(Cliente, id_cliente=cliente_id)
@@ -544,7 +559,7 @@ def actualizar_seguimiento(request, cliente_id):
 #  GESTION DE PROVEEDORES
 #####################################
 
-@login_required
+@admin_required
 def listar_proveedores(request):
     q = request.GET.get('q', '')
     if q:
@@ -559,7 +574,7 @@ def listar_proveedores(request):
     }
     return render(request, 'proveedores/listar.html', contexto)
 
-@login_required
+@admin_required
 def crear_proveedor(request):
     if request.method == 'POST':
         form = ProveedorForm(request.POST)
@@ -577,7 +592,7 @@ def crear_proveedor(request):
     
     return render(request, 'proveedores/form.html', contexto)
 
-@login_required
+@admin_required
 def editar_proveedor(request, id):
     proveedor = get_object_or_404(Proveedor, id_proveedor=id)
     
@@ -598,7 +613,7 @@ def editar_proveedor(request, id):
     return render(request, 'proveedores/form.html', contexto)
 
 
-@login_required
+@admin_required
 @require_POST
 def eliminar_proveedor(request, id):
     proveedor = get_object_or_404(Proveedor, id_proveedor=id)
@@ -619,7 +634,7 @@ def eliminar_proveedor(request, id):
 #  VENTAS Y COTIZACIONES
 #####################################
 
-@login_required
+@admin_required
 def nueva_venta(request):
     if request.method == 'POST':
         tipo_documento = request.POST.get('tipo_documento', 'boleta')
@@ -815,7 +830,7 @@ def ver_cotizacion(request, venta_id):
     })
 
 
-@login_required
+@admin_required
 @require_POST
 def confirmar_venta(request, venta_id):
     """El cliente aceptó la cotización: recién ahora se emite boleta/factura y se registra la comisión."""
@@ -1131,14 +1146,22 @@ def historial_compras(request):
     })
 
 
-@login_required
+@admin_required
 def listar_ventas(request):
     ventas = Venta.objects.all().order_by('-fecha')
     rows = [_build_venta_row(v) for v in ventas]
     return render(request, 'ventas/listar_ventas.html', {'rows': rows})
 
 
-@login_required
+@admin_required
+def cotizaciones_pendientes(request):
+    """Todas las cotizaciones pendientes de confirmación, de cualquier vendedor."""
+    ventas = Venta.objects.filter(estado='cotizacion').order_by('fecha')
+    rows = [_build_venta_row(v) for v in ventas]
+    return render(request, 'ventas/cotizaciones_pendientes.html', {'rows': rows})
+
+
+@admin_required
 def detalle_venta(request, venta_id):
     venta = get_object_or_404(Venta, id_venta=venta_id)
     detalles = DetalleVenta.objects.filter(id_venta=venta).select_related('id_producto')
@@ -1172,7 +1195,7 @@ def detalle_venta(request, venta_id):
     })
 
 
-@login_required
+@admin_required
 @require_POST
 def asignar_vendedor(request, venta_id):
     venta = get_object_or_404(Venta, id_venta=venta_id)
@@ -1213,7 +1236,7 @@ def asignar_vendedor(request, venta_id):
 #  VENDEDORES — CRUD + COMISIONES
 #####################################
 
-@login_required
+@admin_required
 def listar_vendedores(request):
     vendedores = Vendedor.objects.all().order_by('nombre')
     data = []
@@ -1228,44 +1251,66 @@ def listar_vendedores(request):
     return render(request, 'vendedores/listar.html', {'data': data})
 
 
-@login_required
+@admin_required
 def crear_vendedor(request):
     if request.method == 'POST':
         form = VendedorForm(request.POST)
         if form.is_valid():
-            v = form.save()
-            messages.success(request, f'Vendedor "{v.nombre}" creado correctamente.')
+            vendedor = form.save(commit=False)
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            if username:
+                user = User.objects.create_user(username=username, password=password)
+                vendedor.user = user
+            vendedor.save()
+            messages.success(request, f'Vendedor "{vendedor.nombre}" creado correctamente.')
             return redirect('listar_vendedores')
     else:
         form = VendedorForm()
     return render(request, 'vendedores/form.html', {'form': form})
 
 
-@login_required
+@admin_required
 def editar_vendedor(request, id):
     vendedor = get_object_or_404(Vendedor, id_vendedor=id)
     if request.method == 'POST':
         form = VendedorForm(request.POST, instance=vendedor)
         if form.is_valid():
-            v = form.save()
-            messages.success(request, f'Vendedor "{v.nombre}" actualizado.')
+            vendedor = form.save(commit=False)
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            if username:
+                if vendedor.user_id:
+                    user = vendedor.user
+                    user.username = username
+                    if password:
+                        user.set_password(password)
+                    user.save()
+                else:
+                    user = User.objects.create_user(username=username, password=password)
+                    vendedor.user = user
+            vendedor.save()
+            messages.success(request, f'Vendedor "{vendedor.nombre}" actualizado.')
             return redirect('listar_vendedores')
     else:
         form = VendedorForm(instance=vendedor)
     return render(request, 'vendedores/form.html', {'form': form, 'vendedor': vendedor})
 
 
-@login_required
+@admin_required
 @require_POST
 def eliminar_vendedor(request, id):
     vendedor = get_object_or_404(Vendedor, id_vendedor=id)
     nombre = vendedor.nombre
+    user = vendedor.user
     vendedor.delete()
+    if user:
+        user.delete()
     messages.success(request, f'Vendedor "{nombre}" eliminado.')
     return redirect('listar_vendedores')
 
 
-@login_required
+@admin_required
 def comisiones_vendedor(request, id):
     vendedor = get_object_or_404(Vendedor, id_vendedor=id)
     ventas = (VentaVendedor.objects
@@ -1277,6 +1322,35 @@ def comisiones_vendedor(request, id):
     return render(request, 'vendedores/comisiones.html', {
         'vendedor': vendedor,
         'ventas': ventas,
+        'total_neto': total_neto,
+        'total_comision': total_comision,
+    })
+
+
+@login_required
+def mi_perfil_vendedor(request):
+    """Perfil del vendedor logueado: sus propias cotizaciones pendientes,
+    ventas confirmadas y comisiones. No ve nada del resto del panel."""
+    vendedor = getattr(request.user, 'vendedor_perfil', None)
+    if not vendedor:
+        messages.error(request, 'Tu cuenta no está asociada a ningún vendedor.')
+        return redirect('inicio')
+
+    cotizaciones_pendientes = (
+        Venta.objects.filter(id_vendedor=vendedor, estado='cotizacion').order_by('fecha')
+    )
+
+    ventas_info = (VentaVendedor.objects
+                   .filter(id_vendedor=vendedor)
+                   .select_related('id_venta')
+                   .order_by('-id_venta__fecha'))
+    total_neto = sum(v.neto for v in ventas_info)
+    total_comision = sum(v.comision for v in ventas_info)
+
+    return render(request, 'vendedores/mi_perfil.html', {
+        'vendedor': vendedor,
+        'cotizaciones_pendientes': cotizaciones_pendientes,
+        'ventas_info': ventas_info,
         'total_neto': total_neto,
         'total_comision': total_comision,
     })
@@ -1304,7 +1378,7 @@ def _autodetectar_estado(mensajes):
     return 'en_consulta'
 
 
-@login_required
+@admin_required
 def listar_ventas_chatbot(request):
     """Ventas originadas desde el chatbot (origen='chatbot'). Comisión = 0."""
     ventas = (Venta.objects
@@ -1327,7 +1401,7 @@ def listar_ventas_chatbot(request):
     })
 
 
-@login_required
+@admin_required
 def listar_conversaciones(request):
     """Lista de contactos únicos con estado de compra."""
     from django.db.models import Max, Count
@@ -1388,7 +1462,7 @@ def listar_conversaciones(request):
     })
 
 
-@login_required
+@admin_required
 @require_POST
 def enviar_recordatorio_whatsapp(request):
     """Envía un mensaje de recordatorio de carrito abandonado al cliente por WhatsApp."""
@@ -1449,7 +1523,7 @@ def enviar_recordatorio_whatsapp(request):
     return redirect(f"{reverse('detalle_conversacion')}?{_ue({'tel': telefono})}")
 
 
-@login_required
+@admin_required
 @require_POST
 def actualizar_estado_conversacion(request):
     """Actualiza manualmente el estado de compra de una conversación."""
@@ -1466,7 +1540,7 @@ def actualizar_estado_conversacion(request):
     return redirect(f"{reverse('detalle_conversacion')}?{_ue({'tel': telefono})}")
 
 
-@login_required
+@admin_required
 def detalle_conversacion(request):
     """Hilo completo de mensajes con un contacto (telefono viene como ?tel=...)."""
     telefono = request.GET.get('tel', '')
@@ -1648,7 +1722,7 @@ def webhook_whatsapp(request):
 #  IMPRESORA DE ETIQUETAS
 #####################################
 
-@login_required
+@admin_required
 def impresora_etiquetas(request):
     from pathlib import Path
 
@@ -1716,7 +1790,7 @@ def impresora_etiquetas(request):
     })
 
 
-@login_required
+@admin_required
 def imprimir_etiqueta(request, pk):
     etiqueta = get_object_or_404(EtiquetaProducto, pk=pk)
     config = ConfiguracionEtiqueta.get()
@@ -1730,7 +1804,7 @@ def imprimir_etiqueta(request, pk):
     })
 
 
-@login_required
+@admin_required
 def ajuste_impresion(request):
     from pathlib import Path
 
@@ -1822,16 +1896,16 @@ def ajuste_impresion(request):
     })
 
 
-@login_required
+@admin_required
 def impresora_certificados(request):
     return render(request, 'certificados/lista.html')
 
 
-@login_required
+@admin_required
 def certificado_recarga(request):
     return render(request, 'certificados/recarga.html')
 
 
-@login_required
+@admin_required
 def certificado_venta(request):
     return render(request, 'certificados/venta.html')

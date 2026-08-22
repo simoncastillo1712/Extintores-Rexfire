@@ -6,6 +6,7 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from datetime import date, timedelta
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -291,6 +292,11 @@ class Vendedor(models.Model):
     email = models.CharField(max_length=100, blank=True, null=True)
     activo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='vendedor_perfil',
+        help_text='Cuenta con la que este vendedor inicia sesión para ver su propio perfil.',
+    )
 
     class Meta:
         db_table = 'vendedor'
