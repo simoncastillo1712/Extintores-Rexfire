@@ -5,7 +5,9 @@
 .admin-header { background:linear-gradient(135deg,#0d6efd 0%,#0a58ca 100%); border-radius:16px; padding:18px 20px; color:#fff; margin-bottom:20px; }
 .admin-header h4 { font-size:1.2rem; font-weight:700; margin:0; }
 .admin-header p { font-size:.85rem; margin:4px 0 0; opacity:.9; }
-.seg-card { border:1.5px solid #e9ecef; border-radius:14px; background:#fff; padding:14px 16px; margin-bottom:10px; }
+.seg-card { border:1.5px solid #e9ecef; border-left:5px solid #e9ecef; border-radius:14px; background:#fff; padding:14px 16px; margin-bottom:10px; transition:background-color .2s, border-color .2s; }
+.seg-card--gestionada { background:#eefbf3; border-color:#a7e3bf; border-left-color:#198754; }
+.seg-card--pendiente  { background:#fff8f6; border-color:#f3c9bd; border-left-color:#dc3545; }
 .seg-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .seg-nombre { font-weight:700; font-size:.95rem; color:#212529; }
 .seg-rut { font-size:.8rem; color:#6c757d; }
@@ -44,7 +46,7 @@
     <div class="tab-pane fade show active" id="tab-mantencion" role="tabpanel">
         {% if mantenciones %}
             {% for item in mantenciones %}
-            <div class="seg-card">
+            <div class="seg-card {% if item.gestionado %}seg-card--gestionada{% else %}seg-card--pendiente{% endif %}">
                 <div class="seg-card-top">
                     <div>
                         <div class="seg-nombre">{{ item.cliente.razon_social }}</div>
@@ -121,7 +123,7 @@
     <div class="tab-pane fade" id="tab-recarga" role="tabpanel">
         {% if recargas %}
             {% for item in recargas %}
-            <div class="seg-card">
+            <div class="seg-card {% if item.gestionado %}seg-card--gestionada{% else %}seg-card--pendiente{% endif %}">
                 <div class="seg-card-top">
                     <div>
                         <div class="seg-nombre">{{ item.cliente.razon_social }}</div>

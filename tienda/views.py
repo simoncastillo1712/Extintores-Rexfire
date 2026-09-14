@@ -514,9 +514,16 @@ def proximas_recargas(request):
                     'estado': estado,
                     'estado_display': etiquetas_estado.get(estado, estado),
                     'comentario': seg.comentario if seg else '',
+                    'gestionado': estado != 'pendiente',
+                    'gestionado_en': seg.updated_at if seg else None,
                 })
-        items.sort(key=lambda x: x['dias'])
-        return items
+        # Las gestionadas van primero (más recién gestionadas arriba);
+        # las pendientes quedan después, ordenadas por urgencia.
+        gestionadas = [i for i in items if i['gestionado']]
+        pendientes = [i for i in items if not i['gestionado']]
+        gestionadas.sort(key=lambda x: x['gestionado_en'], reverse=True)
+        pendientes.sort(key=lambda x: x['dias'])
+        return gestionadas + pendientes
 
     contexto = {
         'mantenciones': _armar_lista('mantencion', 'proxima_mantencion'),
