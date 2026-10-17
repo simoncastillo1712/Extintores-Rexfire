@@ -181,7 +181,7 @@
 
   <!-- Condiciones y pago -->
   <div class="row g-3 mb-3">
-    <div class="col-md-6">
+    <div class="{% if despacho_tipo == 'ninguno' %}col-12{% else %}col-md-6{% endif %}">
       <div class="cot-box">
         <h6 class="cot-section-title">DATOS DE PAGO</h6>
         <p class="mb-1"><strong>Transferencia / Efectivo</strong> (sin recargo)</p>
@@ -191,6 +191,7 @@
         <p class="mb-0"><strong>Email:</strong> extintoresrexfire@gmail.com</p>
       </div>
     </div>
+    {% if despacho_tipo != 'ninguno' %}
     <div class="col-md-6">
       <div class="cot-box">
         <h6 class="cot-section-title">DESPACHO EN SANTIAGO</h6>
@@ -198,16 +199,15 @@
         <p class="mb-1" style="color:#065f46;font-weight:600;">✅ Despacho sin costo (compra sobre $300.000 neto)</p>
         {% elif despacho_tipo == 'cobro' %}
         <p class="mb-1" style="color:#92400e;font-weight:600;">🚚 Despacho incluido: ${{ despacho_neto|clp }} + IVA</p>
-        {% elif despacho_tipo == 'sin_despacho' %}
-        <p class="mb-1" style="color:#991b1b;">⚠️ Retiro en sucursal (mínimo $50.000 para despacho)</p>
         {% else %}
-        <p class="mb-1" style="font-weight:600;">Sin despacho: retiro en sucursal — Santa Gemita 909 L.202B, Maipú.</p>
+        <p class="mb-1" style="color:#991b1b;">⚠️ Retiro en sucursal (mínimo $50.000 para despacho)</p>
         {% endif %}
         <p class="mb-1">Compras sobre <strong>$300.000</strong>: despacho sin costo.</p>
         <p class="mb-1">Entre $50.000 y $300.000: despacho <strong>$6.800 + IVA</strong>.</p>
         <p class="mb-0 text-muted" style="font-size:0.82rem;">Despachos fuera de Santiago previamente coordinados.</p>
       </div>
     </div>
+    {% endif %}
   </div>
 
   <div class="cot-footer">
