@@ -106,7 +106,7 @@ def inicio(request):
 def listar_servicios(request):
     q = request.GET.get('q', '')
     servicios = Producto.objects.select_related('id_categoria').filter(
-        id_categoria__nombre='Servicios'
+        id_categoria__nombre__in=['Servicios', 'Recargas', 'Recambios']
     ).filter(
         Q(nombre__icontains='Recarga') |
         Q(nombre__icontains='Recambio') |
