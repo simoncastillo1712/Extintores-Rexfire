@@ -41,8 +41,42 @@ def _productos_venta_ordenados():
         peso = int(m.group(1)) if m else 9999
         return (cat, peso, p.nombre)
 
-    qs = Producto.objects.select_related('id_categoria').all()
+    qs = Producto.objects.select_related('id_categoria').exclude(nombre=DESPACHO_NOMBRE)
     return sorted(qs, key=sort_key)
+
+
+# El despacho de una venta directa se guarda como una línea más (producto técnico),
+# no como producto vendible: queda fuera del selector y de la base de comisión.
+DESPACHO_NOMBRE = 'Despacho en Santiago'
+DESPACHO_PRECIO_NETO = 6800
+DESPACHO_GRATIS_DESDE = 300000
+
+
+def _separar_despacho(detalles):
+    """Devuelve (detalles sin despacho, detalle de despacho o None)."""
+    items, despacho = [], None
+    for d in detalles:
+        if d.id_producto.nombre == DESPACHO_NOMBRE:
+            despacho = d
+        else:
+            items.append(d)
+    return items, despacho
+
+
+def _calcular_despacho(venta, despacho_det, neto):
+    """(despacho_neto, tipo). Ventas directas: lo que se agregó como línea.
+    Web/chatbot (histórico): se calcula según el monto neto."""
+    if venta.origen == 'directo':
+        if despacho_det is None:
+            return None, 'ninguno'
+        if despacho_det.subtotal == 0:
+            return 0, 'gratis'
+        return despacho_det.subtotal, 'cobro'
+    if neto >= DESPACHO_GRATIS_DESDE:
+        return 0, 'gratis'
+    if neto >= 50000:
+        return DESPACHO_PRECIO_NETO, 'cobro'
+    return None, 'sin_despacho'
 
 from .models import Categoria, Producto, Cliente, Proveedor, Venta, DetalleVenta, Boleta, Factura, Vendedor, VentaVendedor, ConversacionWhatsapp, ConversacionEstado, EtiquetaProducto, ConfiguracionEtiqueta, SeguimientoCliente
 from .forms import CategoriaForm, ProductoForm, ClienteForm, ProveedorForm, VendedorForm, ClientePerfilForm
@@ -716,8 +750,25 @@ def nueva_venta(request):
                 'productos': _productos_venta_ordenados(),
             })
 
-        iva = round(neto * 0.19)
-        total = neto + iva
+        # Despacho opcional: gratis desde $300.000 neto, si no $6.800 neto
+        if request.POST.get('incluir_despacho'):
+            desp_cat, _ = Categoria.objects.get_or_create(
+                nombre='Servicios',
+                defaults={'descripcion': 'Servicios de recarga, recambio, capacitación e instalación de extintores'},
+            )
+            desp_prod, _ = Producto.objects.get_or_create(
+                nombre=DESPACHO_NOMBRE,
+                defaults={'precio': DESPACHO_PRECIO_NETO, 'stock': 999, 'id_categoria': desp_cat,
+                          'descripcion': 'Despacho en Santiago.'},
+            )
+            desp_monto = 0 if neto >= DESPACHO_GRATIS_DESDE else DESPACHO_PRECIO_NETO
+            lineas.append((desp_prod, 1, desp_monto, desp_monto))
+            neto_total = neto + desp_monto
+        else:
+            neto_total = neto
+
+        iva = round(neto_total * 0.19)
+        total = neto_total + iva
 
         # Crear Venta
         venta = Venta(
@@ -761,7 +812,8 @@ def nueva_venta(request):
 
 def ver_cotizacion(request, venta_id):
     venta = get_object_or_404(Venta, id_venta=venta_id)
-    detalles = DetalleVenta.objects.filter(id_venta=venta).select_related('id_producto')
+    detalles, despacho_det = _separar_despacho(
+        DetalleVenta.objects.filter(id_venta=venta).select_related('id_producto'))
 
     neto = sum(d.subtotal for d in detalles)
     iva = round(neto * 0.19)
@@ -796,16 +848,7 @@ def ver_cotizacion(request, venta_id):
         except (Cliente.DoesNotExist, ValueError):
             pass
 
-    # Calcular despacho según monto neto
-    if neto >= 300000:
-        despacho_neto = 0
-        despacho_tipo = 'gratis'
-    elif neto >= 50000:
-        despacho_neto = 6800
-        despacho_tipo = 'cobro'
-    else:
-        despacho_neto = None
-        despacho_tipo = 'sin_despacho'
+    despacho_neto, despacho_tipo = _calcular_despacho(venta, despacho_det, neto)
 
     despacho_iva = round(despacho_neto * 0.19) if despacho_neto else 0
     despacho_total = (despacho_neto or 0) + despacho_iva
@@ -847,7 +890,8 @@ def confirmar_venta(request, venta_id):
         messages.info(request, 'Esta venta ya estaba confirmada.')
         return redirect('ver_cotizacion', venta_id=venta.id_venta)
 
-    detalles = DetalleVenta.objects.filter(id_venta=venta)
+    detalles, _ = _separar_despacho(
+        DetalleVenta.objects.filter(id_venta=venta).select_related('id_producto'))
     neto = sum(d.subtotal for d in detalles)
 
     _confirmar_venta(venta, venta.id_cliente, venta.id_vendedor, neto)
@@ -1171,22 +1215,17 @@ def cotizaciones_pendientes(request):
 @admin_required
 def detalle_venta(request, venta_id):
     venta = get_object_or_404(Venta, id_venta=venta_id)
-    detalles = DetalleVenta.objects.filter(id_venta=venta).select_related('id_producto')
+    detalles, despacho_det = _separar_despacho(
+        DetalleVenta.objects.filter(id_venta=venta).select_related('id_producto'))
     row = _build_venta_row(venta)
 
     neto = sum(d.subtotal for d in detalles)
-    iva = round(neto * 0.19)
-
-    if neto >= 300000:
-        despacho_neto, despacho_tipo = 0, 'gratis'
-    elif neto >= 50000:
-        despacho_neto, despacho_tipo = 6800, 'cobro'
-    else:
-        despacho_neto, despacho_tipo = None, 'sin_despacho'
+    despacho_neto, despacho_tipo = _calcular_despacho(venta, despacho_det, neto)
 
     despacho_iva = round((despacho_neto or 0) * 0.19)
     total_neto = neto + (despacho_neto or 0)
-    total_final = total_neto + round(total_neto * 0.19)
+    iva = round(total_neto * 0.19)
+    total_final = total_neto + iva
 
     return render(request, 'ventas/detalle_venta.html', {
         **row,
@@ -1226,7 +1265,8 @@ def asignar_vendedor(request, venta_id):
         vv.comision = round(vv.neto * 0.20)
         vv.save()
     else:
-        detalles = DetalleVenta.objects.filter(id_venta=venta)
+        detalles, _ = _separar_despacho(
+            DetalleVenta.objects.filter(id_venta=venta).select_related('id_producto'))
         neto = sum(d.subtotal for d in detalles)
         VentaVendedor(
             id_venta=venta,

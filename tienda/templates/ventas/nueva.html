@@ -161,6 +161,11 @@
   </div>
 
   <!-- ALERTA DE DESPACHO -->
+  <div class="form-check form-switch mb-2 ms-1">
+    <input class="form-check-input" type="checkbox" role="switch" id="incluirDespacho" name="incluir_despacho" value="1">
+    <label class="form-check-label fw-semibold" for="incluirDespacho">🚚 Incluir despacho en Santiago</label>
+    <small class="text-muted d-block">Se suma automáticamente: $6.800 neto, o gratis desde $300.000 neto. Sin marcar, no se cobra despacho (ej: recargas con retiro).</small>
+  </div>
   <div id="alertaDespacho" class="mb-3" style="display:none;"></div>
 
   <!-- RESUMEN -->
@@ -396,11 +401,12 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function calcularDespacho(neto) {
-    if (neto <= 0)    return { tipo: 'vacio',       monto: 0 };
-    if (neto >= 300000) return { tipo: 'gratis',    monto: 0 };
-    if (neto >= 50000)  return { tipo: 'cobro',     monto: 6800 };
-    return                     { tipo: 'sin_despacho', monto: 0 };
+    if (neto <= 0 || !document.getElementById('incluirDespacho').checked) return { tipo: 'vacio', monto: 0 };
+    if (neto >= 300000) return { tipo: 'gratis', monto: 0 };
+    return                     { tipo: 'cobro',  monto: 6800 };
   }
+
+  document.getElementById('incluirDespacho').addEventListener('change', recalcularTotal);
 
   function mostrarAlertaDespacho(neto, despacho) {
     const div = document.getElementById('alertaDespacho');
@@ -418,9 +424,8 @@ document.addEventListener('DOMContentLoaded', function () {
         Agrega <strong>${formatCLP(falta)}</strong> más en productos para despacho gratuito.
       </div>`;
     } else {
-      html = `<div class="alert alert-danger py-2 mb-0">
-        ⚠️ <strong>Sin despacho.</strong> El mínimo para despacho es $50.000 neto. Se puede coordinar retiro en Santa Gemita 909 L.202B, Maipú.
-      </div>`;
+      div.style.display = 'none';
+      return;
     }
     div.innerHTML = html;
     div.style.display = '';
