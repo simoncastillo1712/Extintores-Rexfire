@@ -57,9 +57,9 @@
     <div class="cot-header__right">
       <div class="cot-doc-badge">
         <div class="cot-doc-tipo">
-          {% if boleta %}BOLETA{% elif factura %}FACTURA{% else %}COTIZACIÓN{% endif %}
+          {% if boleta %}BOLETA{% elif factura %}FACTURA{% else %}Cotización de Productos/Servicios{% endif %}
         </div>
-        <div class="cot-doc-numero">N° {{ numero_documento }}</div>
+        {% if boleta or factura %}<div class="cot-doc-numero">N° {{ numero_documento }}</div>{% endif %}
         <div class="cot-doc-fecha">{{ venta.fecha|date:"d/m/Y" }}</div>
       </div>
     </div>
