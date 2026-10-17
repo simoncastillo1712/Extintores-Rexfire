@@ -2,6 +2,20 @@
 {% load static %}
 {% block contenido %}
 
+<style>
+  .gratis-badge {
+    display:inline-block; margin-top:4px; padding:2px 10px; border-radius:999px;
+    font-size:.72rem; font-weight:800; letter-spacing:.04em; color:#fff;
+    background:linear-gradient(135deg,#16a34a,#22c55e);
+    box-shadow:0 2px 6px rgba(22,163,74,.45);
+    animation:gratisPop .35s ease-out;
+  }
+  @keyframes gratisPop { 0%{transform:scale(.6);opacity:0} 70%{transform:scale(1.12)} 100%{transform:scale(1);opacity:1} }
+  tr.fila-regalo { background:#f0fff4; box-shadow:inset 4px 0 0 #22c55e; }
+  tr.fila-regalo .precio-input { background:#dcfce7; color:#065f46; font-weight:700; }
+  .regalo-check .form-check-input:checked { background-color:#16a34a; border-color:#16a34a; }
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2 class="fw-bold mb-0">Nueva Venta / Cotización</h2>
   <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
@@ -140,8 +154,8 @@
       </div>
       <div class="px-3 py-2 text-muted" style="font-size:0.8rem;">
         <i class="bi bi-info-circle"></i>
-        Los ítems marcados como <strong class="text-success">GRATIS</strong> se incluyen en la boleta/factura con precio $0.
-        Puedes editar el precio de cualquier ítem antes de guardar.
+        Activa <strong>🎁 Regalar</strong> en un ítem para entregarlo <strong class="text-success">★ GRATIS</strong> (se incluye en la boleta/factura con precio $0).
+        Al desactivarlo vuelve su precio normal. También puedes editar el precio de cualquier ítem antes de guardar.
       </div>
     </div>
   </div>
@@ -224,7 +238,11 @@
         <input type="number" name="precio_unitario[]" class="form-control precio-input"
                value="0" min="0" style="width:90px;">
       </div>
-      <small class="gratis-badge text-success fw-bold d-none">GRATIS</small>
+      <div class="form-check form-switch mt-1 mb-0 regalo-check">
+        <input class="form-check-input regalo-toggle" type="checkbox" role="switch">
+        <label class="form-check-label small fw-semibold regalo-label">🎁 Regalar</label>
+      </div>
+      <span class="gratis-badge d-none">★ GRATIS</span>
     </td>
     <td>
       <input type="number" name="cantidad[]" class="form-control form-control-sm cantidad-input"
@@ -280,24 +298,24 @@ document.addEventListener('DOMContentLoaded', function () {
       const opt = e.target.selectedOptions[0];
       const precio = opt ? parseInt(opt.dataset.precio || 0) : 0;
       const esGratis = opt && opt.dataset.gratis === '1';
-      const precioInput = row.querySelector('.precio-input');
-      const gratisBadge = row.querySelector('.gratis-badge');
+      const toggle = row.querySelector('.regalo-toggle');
 
-      precioInput.value = precio;
+      row.querySelector('.precio-input').dataset.precioLista = precio;
+      // Productos con precio 0 en catálogo (p. ej. capacitación) siempre van gratis
+      toggle.checked = !!esGratis;
+      aplicarRegalo(row);
+    }
 
-      if (esGratis) {
-        gratisBadge.classList.remove('d-none');
-      } else {
-        gratisBadge.classList.add('d-none');
-      }
-      calcularSubtotalFila(row);
+    if (e.target.classList.contains('regalo-toggle')) {
+      aplicarRegalo(row);
     }
 
     if (e.target.classList.contains('precio-input') || e.target.classList.contains('cantidad-input')) {
-      // Si el usuario edita el precio manualmente, ocultar badge GRATIS si ya no es 0
       if (e.target.classList.contains('precio-input')) {
-        const gratisBadge = row.querySelector('.gratis-badge');
-        gratisBadge.classList.toggle('d-none', parseInt(e.target.value || 0) !== 0);
+        // Edición manual del precio: se actualiza el precio "normal" y se desmarca el regalo
+        row.querySelector('.regalo-toggle').checked = false;
+        e.target.dataset.precioLista = e.target.value || 0;
+        actualizarEstadoRegalo(row);
       }
       calcularSubtotalFila(row);
     }
@@ -308,19 +326,43 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!row) return;
     if (e.target.classList.contains('precio-input') || e.target.classList.contains('cantidad-input')) {
       if (e.target.classList.contains('precio-input')) {
-        const gratisBadge = row.querySelector('.gratis-badge');
-        gratisBadge.classList.toggle('d-none', parseInt(e.target.value || 0) !== 0);
+        row.querySelector('.regalo-toggle').checked = false;
+        e.target.dataset.precioLista = e.target.value || 0;
+        actualizarEstadoRegalo(row);
       }
       calcularSubtotalFila(row);
     }
   });
+
+  // Regalo ON → precio $0 (solo lectura); OFF → vuelve al precio normal
+  function aplicarRegalo(row) {
+    const precioInput = row.querySelector('.precio-input');
+    const regalar = row.querySelector('.regalo-toggle').checked;
+    if (regalar) {
+      precioInput.value = 0;
+    } else {
+      precioInput.value = parseInt(precioInput.dataset.precioLista || 0);
+    }
+    actualizarEstadoRegalo(row);
+    calcularSubtotalFila(row);
+  }
+
+  function actualizarEstadoRegalo(row) {
+    const precioInput = row.querySelector('.precio-input');
+    const regalar = row.querySelector('.regalo-toggle').checked;
+    const esGratis = regalar || parseInt(precioInput.value || 0) === 0;
+    precioInput.readOnly = regalar;
+    row.classList.toggle('fila-regalo', esGratis);
+    row.querySelector('.gratis-badge').classList.toggle('d-none', !esGratis);
+    row.querySelector('.regalo-label').textContent = regalar ? '🎁 Regalo' : '🎁 Regalar';
+  }
 
   function calcularSubtotalFila(row) {
     const precio = Math.max(0, parseInt(row.querySelector('.precio-input').value || 0));
     const cantidad = Math.max(1, parseInt(row.querySelector('.cantidad-input').value || 1));
     const subtotal = precio * cantidad;
     const subtotalSpan = row.querySelector('.subtotal');
-    subtotalSpan.textContent = subtotal === 0 ? 'GRATIS' : formatCLP(subtotal);
+    subtotalSpan.textContent = subtotal === 0 ? '★ GRATIS' : formatCLP(subtotal);
     subtotalSpan.className = 'subtotal fw-semibold ' + (subtotal === 0 ? 'text-success' : '');
     row.querySelector('.subtotal-hidden').value = subtotal;
     recalcularTotal();

@@ -52,11 +52,39 @@ class Command(BaseCommand):
                 'descripcion': 'Recarga de extintor PQS 6KG o 10KG. Incluye revisión técnica y certificación.',
             },
             {
-                'nombre': 'Recambio de Extintor',
-                'precio': 0,
+                'nombre': 'Recambio Extintor Taxis y Colectivos 1KG',
+                'precio': 3000,
                 'stock': 999,
                 'id_categoria': cat_servicios,
-                'descripcion': 'Recambio completo del extintor. Ingresar precio según modelo del extintor.',
+                'descripcion': 'Recambio de extintor 1KG para taxis y colectivos.',
+            },
+            {
+                'nombre': 'Recambio Extintor 1KG',
+                'precio': 4000,
+                'stock': 999,
+                'id_categoria': cat_servicios,
+                'descripcion': 'Recambio de extintor 1KG.',
+            },
+            {
+                'nombre': 'Recambio Extintor 2KG',
+                'precio': 6000,
+                'stock': 999,
+                'id_categoria': cat_servicios,
+                'descripcion': 'Recambio de extintor 2KG.',
+            },
+            {
+                'nombre': 'Recambio Extintor 4KG',
+                'precio': 8000,
+                'stock': 999,
+                'id_categoria': cat_servicios,
+                'descripcion': 'Recambio de extintor 4KG.',
+            },
+            {
+                'nombre': 'Recambio Extintor 6KG y 10KG',
+                'precio': 10000,
+                'stock': 999,
+                'id_categoria': cat_servicios,
+                'descripcion': 'Recambio de extintor 6KG o 10KG.',
             },
             {
                 'nombre': 'Capacitación uso de extintores',
@@ -68,27 +96,27 @@ class Command(BaseCommand):
             },
             {
                 'nombre': 'Instalación de extintores',
-                'precio': 0,
+                'precio': 5000,
                 'stock': 999,
                 'id_categoria': cat_servicios,
                 'descripcion': 'Instalación profesional de extintores en su local o empresa. '
-                               'Sin costo adicional.',
+                               'Valor por extintor.',
             },
             {
                 'nombre': 'Señalética extintor',
-                'precio': 0,
+                'precio': 1500,
                 'stock': 999,
                 'id_categoria': cat_accesorios,
                 'descripcion': 'Señalética oficial para extintores según normativa. '
-                               'Ingresar precio según tipo y cantidad.',
+                               'Valor por unidad.',
             },
             {
                 'nombre': 'Gancho extintor',
-                'precio': 0,
+                'precio': 2000,
                 'stock': 999,
                 'id_categoria': cat_accesorios,
                 'descripcion': 'Gancho de pared para la instalación del extintor. '
-                               'Ingresar precio según modelo.',
+                               'Valor por unidad.',
             },
         ]
 
