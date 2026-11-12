@@ -169,7 +169,6 @@ body { background:#e9ecef; margin:0; font-family:Arial,Helvetica,sans-serif; }
             <tr>
                 <th style="width:36px;">N°</th>
                 <th>NOMBRE COMPLETO</th>
-                <th style="width:120px;">RUT</th>
                 <th style="width:170px;">CARGO</th>
                 <th class="d-print-none" style="width:28px;border:none;background:transparent;"></th>
             </tr>
@@ -217,7 +216,6 @@ function agregarFila() {
     tr.innerHTML = `
         <td class="cert-num n-cell">${n}</td>
         <td><input class="cinput" placeholder="Nombre y apellidos"></td>
-        <td><input class="cinput" placeholder="12.345.678-9"></td>
         <td><input class="cinput" placeholder="Cargo"></td>
         <td class="d-print-none" style="border:none;">
             <button class="btn-row-del" onclick="eliminarFila(${uid})">&#x2715;</button>
