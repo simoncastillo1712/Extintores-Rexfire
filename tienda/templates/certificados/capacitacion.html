@@ -1,0 +1,247 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificado de Capacitación – REXFIRE</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<style>
+body { background:#e9ecef; margin:0; font-family:Arial,Helvetica,sans-serif; }
+
+/* ── Toolbar ── */
+.toolbar { position:sticky; top:0; z-index:200; background:#7a0000; padding:10px 14px; box-shadow:0 2px 8px rgba(0,0,0,.35); }
+.toolbar-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.toolbar-title { color:#fff; font-weight:700; font-size:.95rem; flex:1; }
+.btn-back  { background:#a30000; color:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:.85rem; text-decoration:none; display:flex; align-items:center; gap:5px; }
+.btn-print { background:#cc0000; color:#fff; border:none; border-radius:8px; padding:7px 16px; font-weight:700; font-size:.9rem; display:flex; align-items:center; gap:6px; }
+.toolbar label { color:#e0b4b4; font-size:.72rem; margin-bottom:2px; display:block; }
+.toolbar input { background:#5c0000; border:1px solid #a33; color:#fff; border-radius:6px; padding:6px 10px; font-size:.85rem; width:100%; }
+.toolbar input::placeholder { color:#a77; }
+.toolbar input:focus { outline:none; border-color:#ff6600; background:#6e0000; }
+
+/* ── Certificado ── */
+.cert-wrap {
+    max-width:900px; margin:20px auto 40px; background:#fff;
+    box-shadow:0 2px 20px rgba(0,0,0,.15);
+    padding:30px 52px 36px; font-size:11pt; color:#111;
+    border:6px double #c0392b; outline:1px solid #c0392b; outline-offset:-14px;
+    position:relative;
+}
+.cert-header { display:flex; align-items:center; gap:16px; margin-bottom:6px; }
+.cert-logo { height:62px; }
+.cert-empresa-nombre { font-size:15pt; font-weight:700; color:#c0392b; letter-spacing:.02em; margin-bottom:2px; }
+.cert-empresa-sub { font-size:9pt; color:#444; line-height:1.5; }
+.cert-divider { border:none; border-top:2px solid #c0392b; margin:10px 0 16px; opacity:1; }
+
+.cert-titulo { text-align:center; margin-bottom:16px; }
+.cert-titulo .t1 { font-size:20pt; font-weight:800; letter-spacing:.12em; color:#c0392b; text-transform:uppercase; }
+.cert-titulo .t2 { font-size:11.5pt; font-weight:700; text-transform:uppercase; line-height:1.5; margin-top:4px; padding-bottom:8px; border-bottom:1px solid #c0392b; }
+
+.cert-body { text-align:justify; line-height:1.75; margin-bottom:12px; }
+
+.cert-datos { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:10pt; }
+.cert-datos td { border:1px solid #bbb; padding:5px 10px; }
+.cert-datos td.k { background:#fdf2f2; font-weight:700; width:26%; color:#7a0000; }
+
+.cert-sub { font-size:10.5pt; font-weight:700; color:#c0392b; text-transform:uppercase; letter-spacing:.04em; margin:14px 0 6px; }
+.cert-list { margin:0 0 10px 0; padding-left:20px; font-size:10.5pt; line-height:1.65; }
+.cert-list li::marker { color:#c0392b; }
+
+.cert-table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:9.5pt; }
+.cert-table th { background:#c0392b; color:#fff; padding:6px; text-align:center; border:1px solid #999; font-size:8.5pt; letter-spacing:.02em; }
+.cert-table td { border:1px solid #aaa; padding:5px 6px; text-align:center; vertical-align:middle; height:26px; }
+.cert-table tbody tr:nth-child(even) td { background:#fdf2f2; }
+.cert-num { font-weight:700; }
+
+.cert-cierre { text-align:justify; line-height:1.75; margin-bottom:10px; }
+.cert-ciudad { font-size:10pt; color:#333; margin-bottom:46px; }
+
+.cert-firmas { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; }
+.cert-firma-bloque { text-align:center; flex:1; }
+.cert-firma-linea { border-top:1px solid #000; width:230px; margin:0 auto 6px; }
+.cert-firma-nombre { font-weight:700; font-size:10.5pt; }
+.cert-firma-cargo { font-size:9.5pt; }
+.cert-timbre { width:110px; height:110px; border:1px dashed #bbb; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:8pt; text-align:center; margin:0 auto; }
+
+.cinput { border:none; border-bottom:1px dashed #bbb; background:transparent; padding:1px 4px; font-size:inherit; font-family:inherit; text-align:center; width:100%; box-sizing:border-box; }
+.cinput:focus { outline:none; border-bottom-color:#c0392b; background:#fff8f8; }
+.btn-row-del { border:none; background:none; color:#dc3545; font-size:1rem; padding:0 2px; cursor:pointer; }
+
+@media print {
+    body { background:#fff; }
+    .toolbar, .d-print-none { display:none !important; }
+    .cert-wrap { box-shadow:none; margin:0; padding:9mm 14mm; max-width:100%; }
+    @page { size:A4 portrait; margin:6mm; }
+    .cinput { border:none !important; background:transparent !important; }
+    .cert-timbre { border-color:#fff; color:#fff; }
+    .cert-table th, .cert-datos td.k, .cert-table tbody tr:nth-child(even) td { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .cert-table th { background:#c0392b !important; color:#fff !important; }
+    .cert-datos td.k, .cert-table tbody tr:nth-child(even) td { background:#fdf2f2 !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar d-print-none">
+    <div class="toolbar-top">
+        <a href="{% url 'impresora_certificados' %}" class="btn-back"><i class="bi bi-arrow-left"></i> Volver</a>
+        <span class="toolbar-title"><i class="bi bi-mortarboard-fill me-1" style="color:#ff6600;"></i>Certificado de Capacitación</span>
+        <button onclick="window.print()" class="btn-print"><i class="bi bi-printer-fill"></i> Imprimir</button>
+    </div>
+    <div class="row g-2">
+        <div class="col-12 col-md-5">
+            <label>Empresa / institución capacitada</label>
+            <input type="text" oninput="sync('txt-dest',this.value,'__________________')" placeholder="Ej: Empresa ABC Ltda.">
+        </div>
+        <div class="col-6 col-md-3">
+            <label>Fecha de capacitación</label>
+            <input type="text" oninput="sync('txt-fecha',this.value,'__________')" placeholder="Ej: 10 de noviembre de 2026">
+        </div>
+        <div class="col-6 col-md-2">
+            <label>Duración</label>
+            <input type="text" oninput="sync('txt-dur',this.value,'______')" placeholder="Ej: 2 horas">
+        </div>
+        <div class="col-12 col-md-4">
+            <label>Lugar de realización</label>
+            <input type="text" oninput="sync('txt-lugar',this.value,'__________')" placeholder="Ej: Dependencias de la empresa">
+        </div>
+        <div class="col-12 col-md-4">
+            <label>Ciudad y fecha de emisión</label>
+            <input type="text" id="inp-ciudad" oninput="sync('txt-ciudad',this.value,'')">
+        </div>
+    </div>
+</div>
+
+<!-- Certificado -->
+<div class="cert-wrap">
+
+    <div class="cert-header">
+        <img src="{% static 'img/Logo sin fondo.png' %}" alt="REXFIRE" class="cert-logo">
+        <div>
+            <div class="cert-empresa-nombre">EXTINTORES REXFIRE</div>
+            <div class="cert-empresa-sub">
+                Santa Gemita 909 L.202B, Maipú &nbsp;|&nbsp; +569 7555 5423<br>
+                extintoresrexfire@gmail.com &nbsp;|&nbsp; www.extintoresrexfire.cl
+            </div>
+        </div>
+    </div>
+    <hr class="cert-divider">
+
+    <div class="cert-titulo">
+        <div class="t1">Certificado de Capacitación</div>
+        <div class="t2">Uso y Manipulación de Extintores de Polvo Químico Seco<br>para el Combate de Amagos de Incendio</div>
+    </div>
+
+    <p class="cert-body">
+        Mediante la presente, <strong>EXTINTORES REXFIRE</strong> certifica que el personal de
+        <strong id="txt-dest">__________________</strong>, individualizado en el listado de participantes,
+        ha recibido capacitación teórico-práctica sobre el <strong>uso y manipulación de extintores de
+        Polvo Químico Seco (PQS)</strong> para combatir amagos de incendio, entregándoseles las
+        herramientas y conocimientos necesarios para el correcto manejo del mecanismo de combate de
+        incendios, conforme a la <strong>Norma Chilena 1180-2008</strong>.
+    </p>
+
+    <table class="cert-datos">
+        <tr>
+            <td class="k">Fecha de capacitación</td><td id="txt-fecha">__________</td>
+            <td class="k">Duración</td><td id="txt-dur">______</td>
+        </tr>
+        <tr>
+            <td class="k">Lugar</td><td colspan="3" id="txt-lugar">__________</td>
+        </tr>
+    </table>
+
+    <div class="cert-sub">Contenidos y herramientas entregadas</div>
+    <ul class="cert-list">
+        <li>Teoría del fuego: triángulo y tetraedro del fuego, y clases de fuego (A, B y C).</li>
+        <li>Tipos de extintores, su selección según el riesgo y características del Polvo Químico Seco.</li>
+        <li>Inspección previa y componentes del extintor: manómetro, pasador de seguridad, manguera y válvula.</li>
+        <li>Técnica de operación del mecanismo de descarga: <strong>Pasar, Apuntar, Apretar y Barrer</strong> (P.A.A.B.).</li>
+        <li>Distancia, posición y dirección de ataque; condiciones para atacar un amago o evacuar.</li>
+        <li>Práctica de manipulación y descarga del equipo por parte de los participantes.</li>
+        <li>Medidas de seguridad, protocolo de emergencia y evacuación.</li>
+    </ul>
+
+    <div class="cert-sub">Participantes</div>
+    <table class="cert-table">
+        <thead>
+            <tr>
+                <th style="width:36px;">N°</th>
+                <th>NOMBRE COMPLETO</th>
+                <th style="width:120px;">RUT</th>
+                <th style="width:170px;">CARGO</th>
+                <th class="d-print-none" style="width:28px;border:none;background:transparent;"></th>
+            </tr>
+        </thead>
+        <tbody id="cert-tbody"></tbody>
+    </table>
+
+    <div class="d-print-none mb-3">
+        <button onclick="agregarFila()" class="btn btn-sm btn-outline-danger" style="border-radius:6px;font-size:.82rem;">
+            <i class="bi bi-plus-circle me-1"></i>Agregar participante
+        </button>
+    </div>
+
+    <p class="cert-cierre">
+        Los participantes quedan capacitados para operar extintores de Polvo Químico Seco frente a
+        amagos de incendio. Se expide el presente certificado a solicitud del interesado para los
+        fines que estime convenientes.
+    </p>
+
+    <p class="cert-ciudad" id="txt-ciudad"></p>
+
+    <div class="cert-firmas">
+        <div class="cert-firma-bloque">
+            <div class="cert-timbre">Timbre<br>(opcional)</div>
+        </div>
+        <div class="cert-firma-bloque">
+            <div class="cert-firma-linea"></div>
+            <div class="cert-firma-nombre">Mario Barahona Q.</div>
+            <div class="cert-firma-cargo">Jefe de Operaciones</div>
+            <div class="cert-firma-cargo"><strong>Extintores REXFIRE</strong></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function sync(id, val, fb) {
+    document.getElementById(id).textContent = val.trim() || fb;
+}
+let _uid = 0;
+function agregarFila() {
+    _uid++;
+    const uid = _uid;
+    const tbody = document.getElementById('cert-tbody');
+    const n = String(tbody.rows.length + 1).padStart(2, '0');
+    const tr = document.createElement('tr');
+    tr.id = 'r' + uid;
+    tr.innerHTML = `
+        <td class="cert-num n-cell">${n}</td>
+        <td><input class="cinput" placeholder="Nombre y apellidos"></td>
+        <td><input class="cinput" placeholder="12.345.678-9"></td>
+        <td><input class="cinput" placeholder="Cargo"></td>
+        <td class="d-print-none" style="border:none;">
+            <button class="btn-row-del" onclick="eliminarFila(${uid})">&#x2715;</button>
+        </td>`;
+    tbody.appendChild(tr);
+}
+function eliminarFila(uid) {
+    const el = document.getElementById('r' + uid);
+    if (el) el.remove();
+    document.querySelectorAll('#cert-tbody .n-cell').forEach((td, i) => {
+        td.textContent = String(i + 1).padStart(2, '0');
+    });
+}
+const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const hoy = new Date();
+const fd = `Santiago de Chile, ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+document.getElementById('inp-ciudad').value = fd;
+document.getElementById('txt-ciudad').textContent = fd;
+for (let i = 0; i < 5; i++) agregarFila();
+</script>
+</body>
+</html>

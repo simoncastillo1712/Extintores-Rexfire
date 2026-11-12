@@ -1956,3 +1956,8 @@ def certificado_recarga(request):
 @admin_required
 def certificado_venta(request):
     return render(request, 'certificados/venta.html')
+
+
+@admin_required
+def certificado_capacitacion(request):
+    return render(request, 'certificados/capacitacion.html')

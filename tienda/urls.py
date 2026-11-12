@@ -82,4 +82,5 @@ urlpatterns = [
     path('certificados/',                      views.impresora_certificados, name='impresora_certificados'),
     path('certificados/recarga/',              views.certificado_recarga,    name='certificado_recarga'),
     path('certificados/venta/',                views.certificado_venta,      name='certificado_venta'),
+    path('certificados/capacitacion/',         views.certificado_capacitacion, name='certificado_capacitacion'),
 ]
