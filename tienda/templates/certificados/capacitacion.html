@@ -58,12 +58,11 @@ body { background:#e9ecef; margin:0; font-family:Arial,Helvetica,sans-serif; }
 .cert-cierre { text-align:justify; line-height:1.75; margin-bottom:10px; }
 .cert-ciudad { font-size:10pt; color:#333; margin-bottom:46px; }
 
-.cert-firmas { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; }
-.cert-firma-bloque { text-align:center; flex:1; }
+.cert-firmas { display:flex; justify-content:center; align-items:flex-end; }
+.cert-firma-bloque { text-align:center; }
 .cert-firma-linea { border-top:1px solid #000; width:230px; margin:0 auto 6px; }
 .cert-firma-nombre { font-weight:700; font-size:10.5pt; }
 .cert-firma-cargo { font-size:9.5pt; }
-.cert-timbre { width:110px; height:110px; border:1px dashed #bbb; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:8pt; text-align:center; margin:0 auto; }
 
 .cinput { border:none; border-bottom:1px dashed #bbb; background:transparent; padding:1px 4px; font-size:inherit; font-family:inherit; text-align:center; width:100%; box-sizing:border-box; }
 .cinput:focus { outline:none; border-bottom-color:#c0392b; background:#fff8f8; }
@@ -75,7 +74,6 @@ body { background:#e9ecef; margin:0; font-family:Arial,Helvetica,sans-serif; }
     .cert-wrap { box-shadow:none; margin:0; padding:9mm 14mm; max-width:100%; }
     @page { size:A4 portrait; margin:6mm; }
     .cinput { border:none !important; background:transparent !important; }
-    .cert-timbre { border-color:#fff; color:#fff; }
     .cert-table th, .cert-datos td.k, .cert-table tbody tr:nth-child(even) td { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .cert-table th { background:#c0392b !important; color:#fff !important; }
     .cert-datos td.k, .cert-table tbody tr:nth-child(even) td { background:#fdf2f2 !important; }
@@ -194,9 +192,6 @@ body { background:#e9ecef; margin:0; font-family:Arial,Helvetica,sans-serif; }
     <p class="cert-ciudad" id="txt-ciudad"></p>
 
     <div class="cert-firmas">
-        <div class="cert-firma-bloque">
-            <div class="cert-timbre">Timbre<br>(opcional)</div>
-        </div>
         <div class="cert-firma-bloque">
             <div class="cert-firma-linea"></div>
             <div class="cert-firma-nombre">Mario Barahona Q.</div>
