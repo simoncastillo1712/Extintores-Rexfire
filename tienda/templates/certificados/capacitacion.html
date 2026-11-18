@@ -135,7 +135,7 @@ body { background:#e9ecef; margin:0; font-family:Arial,Helvetica,sans-serif; }
 
     <p class="cert-body">
         Mediante la presente, <strong>EXTINTORES REXFIRE</strong> certifica que el personal de
-        <strong id="txt-dest">__________________</strong>, individualizado en el listado de participantes,
+        <strong id="txt-dest">__________________</strong>,
         ha recibido capacitación teórico-práctica sobre el <strong>uso y manipulación de extintores de
         Polvo Químico Seco (PQS)</strong> para combatir amagos de incendio, entregándoseles las
         herramientas y conocimientos necesarios para el correcto manejo del mecanismo de combate de
@@ -159,31 +159,12 @@ body { background:#e9ecef; margin:0; font-family:Arial,Helvetica,sans-serif; }
         <li>Inspección previa y componentes del extintor: manómetro, pasador de seguridad, manguera y válvula.</li>
         <li>Técnica de operación del mecanismo de descarga: <strong>Pasar, Apuntar, Apretar y Barrer</strong> (P.A.A.B.).</li>
         <li>Distancia, posición y dirección de ataque; condiciones para atacar un amago o evacuar.</li>
-        <li>Práctica de manipulación y descarga del equipo por parte de los participantes.</li>
+        <li>Práctica de manipulación y descarga del equipo por parte del personal.</li>
         <li>Medidas de seguridad, protocolo de emergencia y evacuación.</li>
     </ul>
 
-    <div class="cert-sub">Participantes</div>
-    <table class="cert-table">
-        <thead>
-            <tr>
-                <th style="width:36px;">N°</th>
-                <th>NOMBRE COMPLETO</th>
-                <th style="width:170px;">CARGO</th>
-                <th class="d-print-none" style="width:28px;border:none;background:transparent;"></th>
-            </tr>
-        </thead>
-        <tbody id="cert-tbody"></tbody>
-    </table>
-
-    <div class="d-print-none mb-3">
-        <button onclick="agregarFila()" class="btn btn-sm btn-outline-danger" style="border-radius:6px;font-size:.82rem;">
-            <i class="bi bi-plus-circle me-1"></i>Agregar participante
-        </button>
-    </div>
-
     <p class="cert-cierre">
-        Los participantes quedan capacitados para operar extintores de Polvo Químico Seco frente a
+        El personal queda capacitado para operar extintores de Polvo Químico Seco frente a
         amagos de incendio. Se expide el presente certificado a solicitud del interesado para los
         fines que estime convenientes.
     </p>
@@ -205,36 +186,10 @@ body { background:#e9ecef; margin:0; font-family:Arial,Helvetica,sans-serif; }
 function sync(id, val, fb) {
     document.getElementById(id).textContent = val.trim() || fb;
 }
-let _uid = 0;
-function agregarFila() {
-    _uid++;
-    const uid = _uid;
-    const tbody = document.getElementById('cert-tbody');
-    const n = String(tbody.rows.length + 1).padStart(2, '0');
-    const tr = document.createElement('tr');
-    tr.id = 'r' + uid;
-    tr.innerHTML = `
-        <td class="cert-num n-cell">${n}</td>
-        <td><input class="cinput" placeholder="Nombre y apellidos"></td>
-        <td><input class="cinput" placeholder="Cargo"></td>
-        <td class="d-print-none" style="border:none;">
-            <button class="btn-row-del" onclick="eliminarFila(${uid})">&#x2715;</button>
-        </td>`;
-    tbody.appendChild(tr);
-}
-function eliminarFila(uid) {
-    const el = document.getElementById('r' + uid);
-    if (el) el.remove();
-    document.querySelectorAll('#cert-tbody .n-cell').forEach((td, i) => {
-        td.textContent = String(i + 1).padStart(2, '0');
-    });
-}
 const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const hoy = new Date();
 const fd = `Santiago de Chile, ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
 document.getElementById('inp-ciudad').value = fd;
-document.getElementById('txt-ciudad').textContent = fd;
-for (let i = 0; i < 5; i++) agregarFila();
-</script>
+document.getElementById('txt-ciudad').textContent = fd;</script>
 </body>
 </html>
